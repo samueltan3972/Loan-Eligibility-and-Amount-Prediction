@@ -10,6 +10,7 @@ A Company wants to automate the loan eligibility process based on customer detai
 ---
 
 **1. OSEMN**
+
 Obtain
 Scrub - Samuel 
 Exploratory - Mohan, Samuel
