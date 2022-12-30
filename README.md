@@ -16,7 +16,7 @@ Scrub - Samuel \
 Exploratory - Mohan, Samuel \
 Model 1 - Hafiza, Boon Sheng \
 Model 2 - Boon Sheng, Auni \
-Interpret \
+Interpret
 
 ---
 
