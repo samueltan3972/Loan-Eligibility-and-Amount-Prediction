@@ -11,12 +11,12 @@ A Company wants to automate the loan eligibility process based on customer detai
 
 **1. OSEMN**
 
-Obtain
-Scrub - Samuel 
-Exploratory - Mohan, Samuel
-Model 1 - Hafiza, Boon Sheng
-Model 2 - Boon Sheng, Auni
-Interpret
+Obtain\
+Scrub - Samuel \
+Exploratory - Mohan, Samuel \
+Model 1 - Hafiza, Boon Sheng \
+Model 2 - Boon Sheng, Auni \
+Interpret \
 
 ---
 
