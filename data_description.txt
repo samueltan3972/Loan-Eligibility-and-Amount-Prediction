@@ -1,5 +1,5 @@
 Loan_ID	--> Unique id for every loan request
-Gender	--> Applicant's Gender
+Gender	--> Applicant's Gender (Gender will not taken into consideration of loan application, we support gender equality) --> actually it is just because i am lazy to deal with it
 Married	--> Applicant's Marital status
 Dependents --> How many people are dependent on the Applicant in his/her family.
 Education --> Applicant's Education
@@ -10,3 +10,8 @@ LoanAmount --> Amount of Loan required (Convert to 100k)
 Loan_Amount_Term--> Duration in which applicant wants to pay back the loan amount.
 Credit_History --> Whether the candidate has good or bad credit history in past
 Property_Area --> Type of locality of property which the candidate has given as mortage. The type tells us about property valuation. 
+
+property_Area:
+1 - Rural
+2 - Semiurban
+3 - Urban
