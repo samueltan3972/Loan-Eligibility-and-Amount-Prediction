@@ -4,26 +4,180 @@ output: html_document
 date: "2022-12-29"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
+# Data import
 ```{r cars}
-summary(cars)
+train_set=read.csv("./Data/reg_processed_training_set.csv")
+test_set=read.csv("./Data/reg_processed_testing_set.csv")
+head(train_set) # shows the first 6 rows of train set
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+## Split train set into data (x_train) and label(y_train)
+```{r}
+x_train=train_set[,!names(train_set) %in% c("LoanAmount","Loan_Status")]
+y_train=train_set$LoanAmount
+head(y_train)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Split test set into data (x_test) and label(y_test)
+```{r}
+x_test=test_set[,!names(test_set) %in% c("LoanAmount","Loan_Status")]
+y_test=test_set$LoanAmount
+head(y_test)
+```
+
+# Modelling
+
+## Function 
+```{r}
+library(caret)
+get_performance=function(arg1,arg2){
+mse = mean((arg1 - arg2)^2)
+mae = caret::MAE(arg1, arg2)
+rmse = caret::RMSE(arg1, arg2)
+cat("MSE: ", mse, "MAE: ", mae, " RMSE: ", rmse)
+output=list(mse,mae,rmse)
+return (output)
+}
+```
+
+## XGBoost 
+### Import Library
+```{r}
+library(xgboost)
+library(caret)   
+
+set.seed(1)
+```
+### Building of model
+```{r}
+xgb_train = xgb.DMatrix(data = as.matrix(x_train), label = y_train)
+xgb_test = xgb.DMatrix(data = as.matrix(x_test), label = y_test)
+xgboost_def = xgboost(data = xgb_train,nrounds =50)
+```
+### Prediction
+```{r}
+xgboost_def_predict = predict(xgboost_def, xgb_test)
+```
+
+### Performance
+```{r}
+xgboost_def_result=get_performance(y_test,xgboost_def_predict)
+xgboost_def_result
+```
+
+## XGBoost GridSearchCV Hyperparamters Fine Tuning
+### Parameters
+```{r}
+grid_tune <- expand.grid(
+  nrounds = c(500,1000,1500), #number of trees
+  max_depth = c(2,4,6),
+  eta = c(0.025,0.05,0.1,0.3), #Learning rate
+  gamma = c(0.05, 0.1, 0.5, 0.7, 0.9, 1.0),
+  colsample_bytree = c(0.4, 0.6, 0.8, 1.0), #subsample ratio of columns for tree
+  min_child_weight = c(1,2,3), # the larger, the more conservative the model is; can be used as a stop
+  subsample = c(0.5, 0.75, 1.0) # used to prevent overfitting by sampling X% training
+)
+```
+### Grid tuning
+```{r}
+train_control <- trainControl(method = "cv", number=3,verboseIter = TRUE,allowParallel = TRUE)
+
+#xgb_tune <- train(x = x_train,y = y_train,trControl = train_control,tuneGrid = grid_tune,method= "xgbTree",verbose = TRUE)
+
+#xgb_tune$bestTune
+#xgb_tune
+```
+
+```{r}
+# RMSE was used to select the optimal model using the smallest value.
+# The final values used for the model were nrounds = 500, max_depth = 2, eta
+#= 0.025, gamma = 0.9, colsample_bytree = 0.6, min_child_weight = 3
+#and subsample = 0.5.
+final_tune=expand.grid(
+  nrounds = 500,
+  max_depth = 2,
+  eta = 0.025, 
+  gamma =  0.9,
+  colsample_bytree = 0.6, 
+  min_child_weight = 3, 
+  subsample = 0.5
+  ) 
+
+xgb_tuned <- train(x = x_train,y = y_train,trControl = train_control,tuneGrid = final_tune,method= "xgbTree",verbose = TRUE)
+
+# Prediction:
+xgb_tuned_pred <- predict(xgb_tuned, x_test)
+xgboost_tuned_result=get_performance(y_test,xgb_tuned_pred)
+```
+
+## Support Vector Regression
+### Default Model
+```{r}
+library(e1071)
+library(kernlab)
+svr_def <- svm(formula=y_train ~ . , data=x_train,method = 'svmRadial')
+svr_def_pred <- predict(svr_def, x_test)
+svr_def_result=get_performance(y_test,svr_def_pred)
+```
+
+## Support Vector Regression GridSearchCV Hyperparamters Fine Tuning
+### Parameters
+```{r}
+set.seed(1)
+svr_grid_tune <- expand.grid(
+  C = c(0.01, 0.25, 0.5, 1,10,100),
+  sigma = 0.1
+)
+```
+### Grid tuning
+```{r}
+svr_train_control <- trainControl(method = "cv", number=3)
+svr_tuned <- train(x = x_train,y = y_train,trControl = svr_train_control,tuneGrid = svr_grid_tune,method = 'svmRadial',verbose = TRUE)
+svr_tuned$bestTune
+svr_tuned
+svr_tuned_pred=predict(svr_tuned,x_test)
+svr_tuned_result=get_performance(y_test,svr_tuned_pred)
+```
+## KNN 
+#### Default
+```{r}
+knn_def = knnreg(x_train, y_train)
+str(knn_def)
+knn_def_pred = predict(knn_def, x_test)
+knn_def_result=get_performance(y_test,knn_def_pred)
+```
+### Parameters
+```{r}
+set.seed(1)
+knn_grid_tune <- expand.grid(
+  k = 1:50
+  )
+```
+### Grid tuning
+```{r}
+knn_train_control <- trainControl(method = "cv", number=3)
+knn_tuned <- train(x = x_train,y = y_train,trControl = knn_train_control,tuneGrid = knn_grid_tune,method = 'knn',verbose = TRUE)
+knn_tuned$bestTune
+knn_tuned
+knn_tuned_pred=predict(knn_tuned,x_test)
+knn_tuned_result=get_performance(y_test,knn_tuned_pred)
+```
+
+## Final Result DataFrame
+```{r}
+Name=c('XGBoost-Default','XGBosot-Grid Tuned','SVM Regression-Default','SVM Regression-Grid Tune','kNN-Default','kNN-Grid Tune')
+MSE=c(xgboost_def_result[[1]],xgboost_tuned_result[[1]],
+      svr_def_result[[1]],svr_tuned_result[[1]],
+      knn_def_result[[1]],knn_tuned_result[[1]])
+
+MAE=c(xgboost_def_result[[2]],xgboost_tuned_result[[2]],
+      svr_def_result[[2]],svr_tuned_result[[2]],
+      knn_def_result[[2]],knn_tuned_result[[2]])
+
+RMSE=c(xgboost_def_result[[3]],xgboost_tuned_result[[3]],
+      svr_def_result[[3]],svr_tuned_result[[3]],
+      knn_def_result[[3]],knn_tuned_result[[3]])
+
+df <- data.frame(Name,MSE,MAE,RMSE)
+print (df)
+```

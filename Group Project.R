@@ -37,7 +37,7 @@ dataset = read.csv("./Data/combined_training_testing.csv")
 head(dataset)
 glimpse(dataset)
 
-# 1. Data Scrub
+# 1. Data Scrubcd 
 
 # 1.1 Check and deal the missing value
 # Check number of empty value in a dataset
@@ -153,6 +153,15 @@ glimpse(testing_set)
 write.csv(dataset, "./Data/processed_dataset.csv", row.names = FALSE)
 write.csv(training_set, "./Data/processed_training_set.csv", row.names = FALSE)
 write.csv(testing_set, "./Data/processed_testing_set.csv", row.names = FALSE)
+
+reg_dataset=dataset[dataset$Loan_Status==1,]
+reg_sample = sample(c(TRUE, FALSE), nrow(reg_dataset), replace=TRUE, prob=c(0.8,0.2))
+reg_training_set  = reg_dataset[reg_sample, ]
+reg_testing_set   = reg_dataset[!reg_sample, ]
+
+write.csv(reg_dataset, "./Data/reg_processed_dataset.csv", row.names = FALSE)
+write.csv(reg_training_set, "./Data/reg_processed_training_set.csv", row.names = FALSE)
+write.csv(reg_testing_set, "./Data/reg_processed_testing_set.csv", row.names = FALSE)
 
 # 2. EDA
 
