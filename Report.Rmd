@@ -25,17 +25,18 @@ y_test=test_set$LoanAmount
 head(y_test)
 ```
 
-# Modelling
+# Regression Modelling -5 Machine Learning algorithms (Linear Regression, Random Forest, XGBoost, Support Vector Regression, K-Nearest Neighbor)
 
-## Function 
+## Function-Customised function to be called
 ```{r}
-library(caret)
 get_performance=function(arg1,arg2){
 mse = mean((arg1 - arg2)^2)
 mae = caret::MAE(arg1, arg2)
 rmse = caret::RMSE(arg1, arg2)
-cat("MSE: ", mse, "MAE: ", mae, " RMSE: ", rmse)
-output=list(mse,mae,rmse)
+measure=postResample(pred = arg2, obs = arg1)
+r_squared=measure[2]
+cat("MSE: ", mse, "MAE: ", mae, " RMSE: ", rmse,"RSquared: ",r_squared)
+output=list(mse,mae,rmse,r_squared)
 return (output)
 }
 ```
@@ -43,30 +44,25 @@ return (output)
 ## XGBoost 
 ### Import Library
 ```{r}
+if(!require("xgboost")) { install.packages("xgboost")  }
+if(!require("caret")) { install.packages("caret")  }
 library(xgboost)
-library(caret)   
-
+library(caret)
 set.seed(1)
 ```
-### Building of model
+### XGBoost-Default Parameters
 ```{r}
 xgb_train = xgb.DMatrix(data = as.matrix(x_train), label = y_train)
 xgb_test = xgb.DMatrix(data = as.matrix(x_test), label = y_test)
 xgboost_def = xgboost(data = xgb_train,nrounds =50)
-```
-### Prediction
-```{r}
+xgboost_def
 xgboost_def_predict = predict(xgboost_def, xgb_test)
-```
-
-### Performance
-```{r}
 xgboost_def_result=get_performance(y_test,xgboost_def_predict)
 xgboost_def_result
 ```
 
-## XGBoost GridSearchCV Hyperparamters Fine Tuning
-### Parameters
+### XGBoost-Fine tuned with GridSearchCV
+#### Parameters
 ```{r}
 grid_tune <- expand.grid(
   nrounds = c(500,1000,1500), #number of trees
@@ -78,10 +74,11 @@ grid_tune <- expand.grid(
   subsample = c(0.5, 0.75, 1.0) # used to prevent overfitting by sampling X% training
 )
 ```
-### Grid tuning
+#### Grid tuning
 ```{r}
-train_control <- trainControl(method = "cv", number=3,verboseIter = TRUE,allowParallel = TRUE)
+train_control <- trainControl(method = "cv", number=10,verboseIter = TRUE,allowParallel = TRUE)
 
+#Commented as time consuming to run, but the best parameters are as below:
 #xgb_tune <- train(x = x_train,y = y_train,trControl = train_control,tuneGrid = grid_tune,method= "xgbTree",verbose = TRUE)
 
 #xgb_tune$bestTune
@@ -104,24 +101,27 @@ final_tune=expand.grid(
   ) 
 
 xgb_tuned <- train(x = x_train,y = y_train,trControl = train_control,tuneGrid = final_tune,method= "xgbTree",verbose = TRUE)
-
+xgb_tuned
 # Prediction:
 xgb_tuned_pred <- predict(xgb_tuned, x_test)
 xgboost_tuned_result=get_performance(y_test,xgb_tuned_pred)
 ```
 
-## Support Vector Regression
-### Default Model
+## Support Vector Regression (SVR)
+### Support Vector Regression (SVR)-Default Parameters
 ```{r}
+if(!require("e1071")) { install.packages("e1071")  }
+if(!require("kernlab")) { install.packages("kernlab")  }
 library(e1071)
 library(kernlab)
 svr_def <- svm(formula=y_train ~ . , data=x_train,method = 'svmRadial')
+svr_def
 svr_def_pred <- predict(svr_def, x_test)
 svr_def_result=get_performance(y_test,svr_def_pred)
 ```
 
-## Support Vector Regression GridSearchCV Hyperparamters Fine Tuning
-### Parameters
+### Support Vector Regression-Fine tuned with GridSearchCV
+#### Parameters
 ```{r}
 set.seed(1)
 svr_grid_tune <- expand.grid(
@@ -129,9 +129,9 @@ svr_grid_tune <- expand.grid(
   sigma = 0.1
 )
 ```
-### Grid tuning
+#### Grid tuning
 ```{r}
-svr_train_control <- trainControl(method = "cv", number=3)
+svr_train_control <- trainControl(method = "cv", number=10)
 svr_tuned <- train(x = x_train,y = y_train,trControl = svr_train_control,tuneGrid = svr_grid_tune,method = 'svmRadial',verbose = TRUE)
 svr_tuned$bestTune
 svr_tuned
@@ -139,23 +139,24 @@ svr_tuned_pred=predict(svr_tuned,x_test)
 svr_tuned_result=get_performance(y_test,svr_tuned_pred)
 ```
 ## KNN 
-#### Default
+### KNN-Default Parameters
 ```{r}
 knn_def = knnreg(x_train, y_train)
-str(knn_def)
+knn_def
 knn_def_pred = predict(knn_def, x_test)
 knn_def_result=get_performance(y_test,knn_def_pred)
 ```
-### Parameters
+### KNN-Fine tuned with GridSearchCV
+#### Parameters
 ```{r}
 set.seed(1)
 knn_grid_tune <- expand.grid(
   k = 1:50
   )
 ```
-### Grid tuning
+#### Grid tuning
 ```{r}
-knn_train_control <- trainControl(method = "cv", number=3)
+knn_train_control <- trainControl(method = "cv", number=10)
 knn_tuned <- train(x = x_train,y = y_train,trControl = knn_train_control,tuneGrid = knn_grid_tune,method = 'knn',verbose = TRUE)
 knn_tuned$bestTune
 knn_tuned
@@ -163,21 +164,82 @@ knn_tuned_pred=predict(knn_tuned,x_test)
 knn_tuned_result=get_performance(y_test,knn_tuned_pred)
 ```
 
+## Linear Regression(LM)
+### Linear Regression(LM)-Default Parameter
+```{r}
+# Build Training model
+lm_model <- train(x = x_train, y = y_train,method = "lm", trControl = trainControl(method='none'))
+summary(lm_model)
+
+# Apply model for prediction
+#Model_training <-predict(lm_model, x_train) # Apply model to make prediction on Training set
+Model_testing <-predict(lm_model, x_test) # Apply model to make prediction on Testing set
+#summary(Model_testing)
+#summary(Model_training)
+lm_def_result=get_performance(y_test,Model_testing)
+```
+
+## Random Forest
+### Random Forest(RF)-Deafult Parameters
+```{r}
+
+library(randomForest)
+library(caret)
+
+# Build Training model, bootstrap
+rf_def <- train(x = x_train, y = y_train ,method = "ranger")
+rf_def
+rf_def_pred=predict(rf_def,x_test)
+rf_def_result=get_performance(y_test,rf_def_pred)
+```
+
+### Random Forest(RF)-Fine tuned with Grid
+```{r}
+# K-Fold Cross Validation
+ctrl<- trainControl(method="cv", number=10)
+# Hyperparameter Tuning
+
+tgrid <- expand.grid(
+  mtry = 2:4,
+  splitrule = "variance",
+  min.node.size = c(5,10, 20)
+)
+
+rf_tuned=train(x = x_train, y = y_train,trControl = ctrl,method = "ranger",tuneGrid = tgrid)
+rf_tuned
+# Apply model to make prediction on Testing set
+rf_tuned_predict=predict(rf_tuned, x_test)
+rf_tuned_result=get_performance(y_test,rf_tuned_predict)
+```
+
+
 ## Final Result DataFrame
 ```{r}
-Name=c('XGBoost-Default','XGBosot-Grid Tuned','SVM Regression-Default','SVM Regression-Grid Tune','kNN-Default','kNN-Grid Tune')
+Name=c('XGBoost-Default','XGBosot-Grid Tuned','SVM Regression-Default','SVM Regression-Grid Tune','kNN-Default','kNN-Grid Tune','Linear Regression-Default','Random Forest-Default','Random Forest-Grid Tuned')
 MSE=c(xgboost_def_result[[1]],xgboost_tuned_result[[1]],
       svr_def_result[[1]],svr_tuned_result[[1]],
-      knn_def_result[[1]],knn_tuned_result[[1]])
+      knn_def_result[[1]],knn_tuned_result[[1]],
+      lm_def_result[[1]],
+      rf_def_result[[1]],rf_tuned_result[[1]])
 
 MAE=c(xgboost_def_result[[2]],xgboost_tuned_result[[2]],
       svr_def_result[[2]],svr_tuned_result[[2]],
-      knn_def_result[[2]],knn_tuned_result[[2]])
+      knn_def_result[[2]],knn_tuned_result[[2]],
+      lm_def_result[[2]],
+      rf_def_result[[2]],rf_tuned_result[[2]])
 
 RMSE=c(xgboost_def_result[[3]],xgboost_tuned_result[[3]],
       svr_def_result[[3]],svr_tuned_result[[3]],
-      knn_def_result[[3]],knn_tuned_result[[3]])
+      knn_def_result[[3]],knn_tuned_result[[3]],
+      lm_def_result[[3]],
+      rf_def_result[[3]],rf_tuned_result[[3]])
 
-df <- data.frame(Name,MSE,MAE,RMSE)
+R_SQUARED=c(xgboost_def_result[[4]],xgboost_tuned_result[[4]],
+      svr_def_result[[4]],svr_tuned_result[[4]],
+      knn_def_result[[4]],knn_tuned_result[[4]],
+      lm_def_result[[4]],
+      rf_def_result[[4]],rf_tuned_result[[4]])
+
+df <- data.frame(Name,MSE,MAE,RMSE,R_SQUARED)
 print (df)
 ```
