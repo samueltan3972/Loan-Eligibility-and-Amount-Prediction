@@ -165,6 +165,53 @@ write.csv(reg_testing_set, "./Data/reg_processed_testing_set.csv", row.names = F
 
 # 2. EDA
 
+Dear CM
+
+summary(df)
+#programming for data science
+
+
+# Exploratory data anaysis
+
+
+df$Married <- as.factor(df$Married)
+df$Dependents <- as.factor(df$Dependents)
+df$Education <- as.factor(df$Education)
+df$Self_Employed <- as.factor(df$Self_Employed)
+df$ApplicantIncome <- as.numeric(df$ApplicantIncome)
+df$CoapplicantIncome <- as.numeric(df$CoapplicantIncome)
+df$LoanAmount <- as.numeric(df$LoanAmount)
+df$Loan_Amount_Term <- as.numeric(df$Loan_Amount_Term)
+df$Credit_History <- as.factor(df$Credit_History)
+df$property_Area <- as.factor(df$property_Area)
+df$Loan_Status <- as.factor(df$Loan_Status)
+
+install.packages('ggplot')
+library(ggplot2)
+library(tidyverse)
+
+# Checking Missing Values from Dataset : df
+num_na<-sapply(df, function(x) sum(is.na(x)))
+num_na[num_na>0]
+
+#distribution of Applications Income
+ggplot(df , aes(x=ApplicantIncome,bins=5,fill=Loan_Status))+
+  geom_histogram()+theme_bw()+
+  labs(x="Income of Applicants",
+       y= "Number of Applicants",
+       title ="Distribution of Applicant's Income")
+
+# Number of Married People
+plot.married <- ggplot(df, aes(x = Married, fill = Loan_Status)) +
+  geom_bar()
+
+ggplot(df, aes(x = Education, fill = Loan_Status)) +
+  geom_bar(position = "fill") +
+  labs(y = "Approval Status", x = 'Education Level') + ggtitle(' Education level vs Loan Status')
+
+  #Education Level seems like does not make any difference.
+
+ggplot(data = df, aes(LoanAmount)) + geom_histogram(binwidth = 10000)
 
 # 3. Model
 
