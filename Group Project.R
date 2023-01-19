@@ -214,4 +214,137 @@ ggplot(df, aes(x = Education, fill = Loan_Status)) +
 ggplot(data = df, aes(LoanAmount)) + geom_histogram(binwidth = 10000)
 
 # 3. Model
+ 
+#3.1. Logistic Regression
+#Install packages for data manipulation, visualization and model training
+install.packages("tidyverse")
+install.packages("caret")
+install.packages("MLmetrics")
 
+library(tidyverse)
+library(caret)
+library(MLmetrics)
+
+#Performance function
+get_performance_v1 <- function(y_true, y_pred){
+  library(MLmetrics)
+  # Convert predicted probabilities to binary labels
+  y_pred_binary <- as.factor(ifelse(y_pred > 0.5, "1", "0"))
+  # Convert true labels to factor
+  y_true <- as.factor(y_true)
+  # Make sure that the levels of y_true and y_pred_binary are the same
+  levels(y_pred_binary) <- levels(y_true)
+  # Confusion matrix
+  cm <- confusionMatrix(y_pred_binary, y_true)
+  # Accuracy
+  acc <- cm$overall[1]
+  # Precision
+  prec <- cm$byClass[1]
+  # Recall
+  rec <- cm$byClass[2]
+  # F1-score
+  f1 <- F1_Score(y_pred_binary, y_true)
+  # Return a list of evaluation metrics
+  return(list(accuracy = acc, precision = prec, recall = rec, f1_score = f1, confusion_matrix = cm))
+}
+
+#Read split dataset
+train_set <- read.csv("processed_training_set.csv")
+test_set <- read.csv("processed_testing_set.csv")
+
+# Split train set into data (x_train) and target(y_train)
+x_train<-train_set[,!names(train_set) %in% "Loan_Status"]
+y_train=train_set$Loan_Status
+
+# Split test set into data (x_test) and target(y_test)
+x_test<-test_set[,!names(test_set) %in% "Loan_Status"]
+y_test<-test_set$Loan_Status
+
+#Building of model
+set.seed(1)
+logistic_def <- glm(formula = y_train ~ ., data = x_train, family = "binomial")
+
+#Prediction using model
+logistic_def_pred <- predict(logistic_def, newdata = x_test, type = "response")
+
+#Evaluate model performance
+logistic_def_result <- get_performance_v1(y_test, logistic_def_pred)
+
+#3.2. Support Vector Machine
+#Install packages for data manipulation, visualization and model training
+install.packages("e1071")
+
+library(e1071)
+library(caret)
+
+#Building of model
+set.seed(1)
+svm_model_def <- svm(y_train ~ ., data = x_train, kernel = "linear", cost = 1)
+
+#Prediction using model
+svm_pred_def <- predict(svm_model_def, x_test)
+
+#Evaluate model performance
+svm_result_def <- get_performance_v1(y_test, svm_pred_def)
+
+#3.3. Naive Bayes
+#Install packages for data manipulation, visualization and model training
+install.packages("e1071")
+
+library(e1071)
+library(caret)
+
+#Building of model
+set.seed(1)
+nb_model_def <- naiveBayes(x_train, y_train)
+
+#Prediction using model
+nb_pred_def <- predict(nb_model_def, x_test)
+
+#Evaluate model performance
+nb_pred_def_numeric <- as.numeric(nb_pred_def)
+nb_result_def <- get_performance_v1(y_test, nb_pred_def_numeric)
+
+#3.4. Decision Tree
+#Install packages for data manipulation, visualization and model training
+install.packages("rpart")
+
+library(rpart)
+
+#Building of model
+set.seed(1)
+dt_model_def <- rpart(formula = y_train ~ ., data = x_train)
+
+#Prediction using model
+dt_pred_def <- predict(dt_model_def, x_test)
+
+#Evaluate model performance
+dt_result_def <- get_performance_v1(y_test, dt_pred_def)
+
+#3.5. XGBoost
+#Install packages for data manipulation, visualization and model training
+install.packages("xgboost")
+
+library(xgboost)
+
+# convert data to matrix
+x_train_matrix <- as.matrix(x_train)
+x_test_matrix <- as.matrix(x_test)
+
+#Building of model
+set.seed(1)
+xgb_model_def <- xgboost(data = x_train_matrix, label = y_train, nrounds = 100, objective = "binary:logistic")
+
+#Prediction using model
+xgb_pred_def <- predict(xgb_model_def, x_test_matrix)
+
+#Evaluate model performance
+xgb_result_def <- get_performance_v1(y_test, xgb_pred_def)
+
+#Final result dataframe to evaluate all models under classification
+model_results_df <- data.frame(
+  +     Model = c("Logistic Regression", "SVM", "Naive Bayes", "Decision Tree", "XGBoost"),
+  +     Accuracy = c(logistic_def_result$accuracy, svm_result_def$accuracy, nb_result_def$accuracy, dt_result_def$accuracy, xgb_result_def$accuracy),
+  +     Precision = c(logistic_def_result$precision, svm_result_def$precision, nb_result_def$precision, dt_result_def$precision, xgb_result_def$precision),
+  +     Recall = c(logistic_def_result$recall, svm_result_def$recall, nb_result_def$recall, dt_result_def$recall, xgb_result_def$recall),
+  +     F1_Score = c(logistic_def_result$f1_score, svm_result_def$f1_score, nb_result_def$f1_score, dt_result_def$f1_score, xgb_result_def$f1_score))
