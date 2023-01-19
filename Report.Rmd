@@ -32,9 +32,9 @@ This project is using OSEMN model.
 **SCRUB:** The dataset come with splitted training set, testing set and sample_submission in csv file. Some action have been taken in data cleaning process to clean and generate new training and testing set.
 
 1.  Combine training and testing set and sample_submission
-2.  Fill in missing value/Remove (Loan amount empty)
+2.  Dealing with missing value
 3.  Convert to 100k unit on Loan Amount
-4.  Label or one-hot encoding for categorical data
+4.  Label encoding for categorical data
 5.  Split into new training and testing set
 
 **EXPLORATORY:**
@@ -51,12 +51,12 @@ This project is using OSEMN model.
 
 ```{r}
 if(!require("dplyr")) { install.packages("dplyr")  }
-if(!require('sjmisc')) { install.packages('sjmisc') }
+if(!require('tidyr')) { install.packages('tidyr') }
 if(!require('DescTools')) { install.packages('DescTools') }
 if(!require('VIM')) { install.packages('VIM') }
 
 library(dplyr)
-library('sjmisc')
+library('tidyr')
 library('DescTools')
 library('VIM')
 
@@ -83,7 +83,7 @@ head(combined_testing_sample)
 ## Check if colnames is matched
 print(colnames(training_set) == colnames(combined_testing_sample))
 combined_training_testing = rbind(combined_testing_sample,training_set) %>% arrange(Loan_ID)
-View(combined_training_testing)
+head(combined_training_testing)
 
 ## Write new combined dataset
 write.csv(combined_training_testing, "./Data/combined_training_testing.csv", row.names = FALSE)
@@ -107,8 +107,9 @@ print.numOfEmtpyValue <- function(data) {
   print(df)
 }
 
+# Convert column that have empty string to NA
+dataset = na_if(dataset, "")
 print.numOfEmtpyValue(dataset)
-View(dataset)
 ```
 
 #### 1.3 Impute the missing value according to the attribute nature
@@ -133,8 +134,7 @@ dataset = regressionImp(ApplicantIncome~Gender+Self_Employed, data=dataset, imp_
 dataset = regressionImp(LoanAmount~Gender+Dependents+Married+Self_Employed+ApplicantIncome+CoapplicantIncome+Credit_History+property_Area+Loan_Status, data=dataset, imp_var=FALSE)
 
 # 1.3.4 Replace NA value in "CoapplicantIncome" with 0 (default value)
-dataset["CoapplicantIncome"] = replace_na(dataset["CoapplicantIncome"], value=0)
-
+dataset["CoapplicantIncome"] = dataset$CoapplicantIncome %>% replace_na(0)
 
 # Check on the missing value
 print.numOfEmtpyValue(dataset)
@@ -190,6 +190,68 @@ glimpse(testing_set)
 
 # 2. EDA
 
+#### Import library
+
+```{r}
+install.packages('ggplot', repos = "http://cran.us.r-project.org")
+install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+
+library(ggplot2)
+library(tidyverse)
+```
+
+#### Create df to avoid mess up with other variable
+
+```{r}
+df = dataset
+
+df$Married <- as.factor(df$Married)
+df$Dependents <- as.factor(df$Dependents)
+df$Education <- as.factor(df$Education)
+df$Self_Employed <- as.factor(df$Self_Employed)
+df$ApplicantIncome <- as.numeric(df$ApplicantIncome)
+df$CoapplicantIncome <- as.numeric(df$CoapplicantIncome)
+df$LoanAmount <- as.numeric(df$LoanAmount)
+df$Loan_Amount_Term <- as.numeric(df$Loan_Amount_Term)
+df$Credit_History <- as.factor(df$Credit_History)
+df$property_Area <- as.factor(df$property_Area)
+df$Loan_Status <- as.factor(df$Loan_Status)
+```
+
+#### Summary of dataset
+
+```{r}
+summary(df)
+```
+
+#### distribution of Applications Income
+
+```{r}
+ggplot(df , aes(x=ApplicantIncome,bins=5,fill=Loan_Status))+
+  geom_histogram()+theme_bw()+
+  labs(x="Income of Applicants",
+       y= "Number of Applicants",
+       title ="Distribution of Applicant's Income")
+```
+
+#### Number of Married People
+
+```{r}
+
+plot.married <- ggplot(df, aes(x = Married, fill = Loan_Status)) +
+  geom_bar()
+
+ggplot(df, aes(x = Education, fill = Loan_Status)) +
+  geom_bar(position = "fill") +
+  labs(y = "Approval Status", x = 'Education Level') + ggtitle(' Education level vs Loan Status')
+```
+
+#### Education Level seems like does not make any difference.
+
+```{r}
+ggplot(data = df, aes(LoanAmount)) + geom_histogram(binwidth = 10000)
+```
+
 # 3. Classification - To check loan eligibility of the customer
 
 5 Classification algorithms:
@@ -203,9 +265,9 @@ glimpse(testing_set)
 #### Install packages for data manipulation, visualization and model training
 
 ```{r}
-install.packages("tidyverse")
-install.packages("caret")
-install.packages("MLmetrics")
+install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+install.packages("caret", repos = "http://cran.us.r-project.org")
+install.packages("MLmetrics", repos = "http://cran.us.r-project.org")
 
 library(tidyverse)
 library(caret)
@@ -241,16 +303,16 @@ get_performance_v1 <- function(y_true, y_pred){
 
 ```{r}
 #Read split dataset
-train_set <- read.csv("processed_training_set.csv")
-test_set <- read.csv("processed_testing_set.csv")
+train_set <- read.csv("./Data/processed_training_set.csv")
+test_set <- read.csv("./Data/processed_testing_set.csv")
 
 # Split train set into data (x_train) and target(y_train)
 x_train <- train_set[,!names(train_set) %in% "Loan_Status"]
-y_train=train_set$Loan_Status
+y_train = train_set$Loan_Status
 
 # Split test set into data (x_test) and target(y_test)
-x_test<-test_set[,!names(test_set) %in% "Loan_Status"]
-y_test<-test_set$Loan_Status
+x_test <- test_set[,!names(test_set) %in% "Loan_Status"]
+y_test <- test_set$Loan_Status
 ```
 
 #### 3.1 Logistic Regression
@@ -270,7 +332,7 @@ logistic_def_result <- get_performance_v1(y_test, logistic_def_pred)
 #### 3.2 Support Vector Machine
 
 ```{r}
-install.packages("e1071")
+install.packages("e1071", repos = "http://cran.us.r-project.org")
 
 library(e1071)
 
@@ -288,12 +350,6 @@ svm_result_def <- get_performance_v1(y_test, svm_pred_def)
 #### 3.3 Naive Bayes
 
 ```{r}
-#Install packages for data manipulation, visualization and model training
-install.packages("e1071")
-
-library(e1071)
-library(caret)
-
 #Building of model
 set.seed(1)
 nb_model_def <- naiveBayes(x_train, y_train)
@@ -310,7 +366,7 @@ nb_result_def <- get_performance_v1(y_test, nb_pred_def_numeric)
 
 ```{r}
 #Install packages for data manipulation, visualization and model training
-install.packages("rpart")
+install.packages("rpart", repos = "http://cran.us.r-project.org")
 library(rpart)
 
 #Building of model
@@ -328,7 +384,7 @@ dt_result_def <- get_performance_v1(y_test, dt_pred_def)
 
 ```{r}
 #Install packages for data manipulation, visualization and model training
-install.packages("xgboost")
+install.packages("xgboost", repos = "http://cran.us.r-project.org")
 
 library(xgboost)
 
@@ -571,7 +627,7 @@ lm_def_result=get_performance(y_test,Model_testing)
 
 #### 4.5 Random Forest
 
-#### Random Forest(RF)-Deafult Parameters
+#### Random Forest (RF) - Deafult Parameters
 
 ```{r}
 
@@ -585,7 +641,7 @@ rf_def_pred=predict(rf_def,x_test)
 rf_def_result=get_performance(y_test,rf_def_pred)
 ```
 
-### Random Forest(RF)-Fine tuned with Grid
+### Random Forest (RF) - Fine tuned with Grid
 
 ```{r}
 # K-Fold Cross Validation
@@ -638,7 +694,7 @@ df <- data.frame(Name,MSE,MAE,RMSE,R_SQUARED)
 print (df)
 ```
 
-## Plotting of graphs
+### Plotting of graphs
 
 Bar charts of performance metrices (RMSE and R_Squared) vs Regression models to show model comparisons.
 
@@ -693,7 +749,7 @@ plot(x=rf_def_pred, y= y_test,
 abline(a=0, b=1)
 ```
 
-## Comparison on XGBoost (Fine tuned parameters) and Random Forest (Default parameters)
+### Comparison on XGBoost (Fine tuned parameters) and Random Forest (Default parameters)
 
 Overview on actual vs predictions of new loan amount using XGBoost tuned prediction model
 

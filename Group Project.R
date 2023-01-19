@@ -1,16 +1,17 @@
 if(!require("dplyr")) { install.packages("dplyr")  }
-if(!require('sjmisc')) { install.packages('sjmisc') }
+if(!require('tidyr')) { install.packages('tidyr') }
 if(!require('DescTools')) { install.packages('DescTools') }
 if(!require('VIM')) { install.packages('VIM') }
 
 library(dplyr)
-library('sjmisc')
+library('tidyr')
+# library('sjmisc')
 library('DescTools')
 library('VIM')
 
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
-# # Prequel: Combine all dataset into one new dataset
+# Prequel: Combine all dataset into one new dataset
 # training_set = read.csv("./Data/training_set.csv")
 # testing_set = read.csv("./Data/testing_set.csv")
 # sample_submission = read.csv("./Data/sample_submission.csv")
@@ -37,7 +38,7 @@ dataset = read.csv("./Data/combined_training_testing.csv")
 head(dataset)
 glimpse(dataset)
 
-# 1. Data Scrubcd 
+# 1. Data Scrubcd
 
 # 1.1 Check and deal the missing value
 # Check number of empty value in a dataset
@@ -45,7 +46,7 @@ print.numOfEmtpyValue <- function(data) {
   # create empty matrix
   df <- data.frame(matrix(ncol = 2, nrow = 0))
   colnames(df) = c("Column_Names", "Num_Of_Empty_Value")
-  
+
   for(i in 1:ncol(data)) {
     df[nrow(df) + 1,] <- c(colnames(data)[i], sum(is.na(data[, i])|is.null(data[, i])|data[, i] == ""))
   }
@@ -58,15 +59,15 @@ View(dataset)
 # Replace empty value with NA
 # replaceEmptyValueWithNA <- function(data){
 #   cname = names(data)
-#   
+#
 #   for(i in cname){
 #     data[!is.na(data[i]) & data[i] == "" | is.null(data[i]), i] = NA
 #     print(paste(i, sum(data[i]=="" | is.null(data[i]))))
 #   }
-#   
+#
 #   return(data)
 # }
-# 
+#
 # dataset = replaceEmptyValueWithNA(dataset)
 
 dataset = na_if(dataset, "")
@@ -99,30 +100,31 @@ print.numOfEmtpyValue(dataset)
 # dataset["Dependents"] = replace_na(dataset["Dependents"], value=0)
 # head(dataset)
 # print.numOfEmtpyValue(dataset)
-# 
+#
 # # Replace NA value in "Education" with mode
 # dataset["Education"] = replace_na(dataset["Education"], value=Mode(dataset[,"Education"], na.rm=TRUE))
 # head(dataset)
 # print.numOfEmtpyValue(dataset)
-# 
+#
 # # Replace NA value in "Self_Employed" with mode
 # dataset["Self_Employed"] = replace_na(dataset["Self_Employed"], value=Mode(dataset[,"Self_Employed"], na.rm=TRUE))
 # head(dataset)
 # print.numOfEmtpyValue(dataset)
-# 
+#
 # # Replace NA value in "ApplicantIncome" with 0 (default value)
 # dataset["ApplicantIncome"] = replace_na(dataset["ApplicantIncome"], value=0)
 # head(dataset)
 # print.numOfEmtpyValue(dataset)
 
 # 1.1.4 Replace NA value in "CoapplicantIncome" with 0 (default value)
-dataset["CoapplicantIncome"] = replace_na(dataset["CoapplicantIncome"], value=0)
+dataset["CoapplicantIncome"] = dataset$CoapplicantIncome %>% replace_na(0)
+#replace_na(dataset["CoapplicantIncome"], value=0)
 head(dataset)
 print.numOfEmtpyValue(dataset)
 
 
 dataset %>% count(property_Area)
-# 
+#
 # which(dataset[,"ApplicantIncome"] == 0)
 # View(dataset[293,])
 
@@ -163,13 +165,13 @@ write.csv(reg_dataset, "./Data/reg_processed_dataset.csv", row.names = FALSE)
 write.csv(reg_training_set, "./Data/reg_processed_training_set.csv", row.names = FALSE)
 write.csv(reg_testing_set, "./Data/reg_processed_testing_set.csv", row.names = FALSE)
 
-# 2. EDA
-summary(df)
+# # 2. EDA
+summary(dataset)
 #programming for data science
 
 
 # Exploratory data anaysis
-
+df = dataset
 
 df$Married <- as.factor(df$Married)
 df$Dependents <- as.factor(df$Dependents)
@@ -214,10 +216,10 @@ ggplot(data = df, aes(LoanAmount)) + geom_histogram(binwidth = 10000)
  
 #3.1. Logistic Regression
 # Install packages for data manipulation, visualization and model training
-install.packages("tidyverse")
-install.packages("caret")
-install.packages("MLmetrics")
-
+# install.packages("tidyverse")
+# install.packages("caret")
+# install.packages("MLmetrics")
+# 
 library(tidyverse)
 library(caret)
 library(MLmetrics)
@@ -246,9 +248,10 @@ get_performance_v1 <- function(y_true, y_pred){
 }
 
 #Read split dataset
-train_set <- read.csv("processed_training_set.csv")
-test_set <- read.csv("processed_testing_set.csv")
-
+train_set <- read.csv("./Data/processed_training_set.csv")
+test_set <- read.csv("./Data/processed_testing_set.csv")
+View(test_set)
+print.numOfEmtpyValue(train_set)
 # Split train set into data (x_train) and target(y_train)
 x_train<-train_set[,!names(train_set) %in% "Loan_Status"]
 y_train=train_set$Loan_Status
@@ -262,6 +265,8 @@ set.seed(1)
 logistic_def <- glm(formula = y_train ~ ., data = x_train, family = "binomial")
 
 #Prediction using model
+print(length(logistic_def))
+print(length(x_test))
 logistic_def_pred <- predict(logistic_def, newdata = x_test, type = "response")
 
 #Evaluate model performance
@@ -269,7 +274,7 @@ logistic_def_result <- get_performance_v1(y_test, logistic_def_pred)
 
 #3.2. Support Vector Machine
 #Install packages for data manipulation, visualization and model training
-install.packages("e1071")
+# install.packages("e1071")
 
 library(e1071)
 library(caret)
@@ -280,10 +285,15 @@ svm_model_def <- svm(y_train ~ ., data = x_train, kernel = "linear", cost = 1)
 
 #Prediction using model
 svm_pred_def <- predict(svm_model_def, x_test)
+print(nrow(x_test))
 
 #Evaluate model performance
 svm_result_def <- get_performance_v1(y_test, svm_pred_def)
 
+print(length(svm_pred_def))
+print(length(x_test))
+
+head(svm_pred_def)
 #3.3. Naive Bayes
 #Install packages for data manipulation, visualization and model training
 install.packages("e1071")
