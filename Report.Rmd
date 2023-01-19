@@ -407,11 +407,13 @@ xgb_result_def <- get_performance_v1(y_test, xgb_pred_def)
 
 ```{r}
 model_results_df <- data.frame(
-  +     Model = c("Logistic Regression", "SVM", "Naive Bayes", "Decision Tree", "XGBoost"),
-  +     Accuracy = c(logistic_def_result$accuracy, svm_result_def$accuracy, nb_result_def$accuracy, dt_result_def$accuracy, xgb_result_def$accuracy),
-  +     Precision = c(logistic_def_result$precision, svm_result_def$precision, nb_result_def$precision, dt_result_def$precision, xgb_result_def$precision),
-  +     Recall = c(logistic_def_result$recall, svm_result_def$recall, nb_result_def$recall, dt_result_def$recall, xgb_result_def$recall),
-  +     F1_Score = c(logistic_def_result$f1_score, svm_result_def$f1_score, nb_result_def$f1_score, dt_result_def$f1_score, xgb_result_def$f1_score))
+       Model = c("Logistic Regression", "SVM", "Naive Bayes", "Decision Tree", "XGBoost"),
+       Accuracy = c(logistic_def_result$accuracy, svm_result_def$accuracy, nb_result_def$accuracy, dt_result_def$accuracy, xgb_result_def$accuracy),
+       Precision = c(logistic_def_result$precision, svm_result_def$precision, nb_result_def$precision, dt_result_def$precision, xgb_result_def$precision),
+       Recall = c(logistic_def_result$recall, svm_result_def$recall, nb_result_def$recall, dt_result_def$recall, xgb_result_def$recall),
+       F1_Score = c(logistic_def_result$f1_score, svm_result_def$f1_score, nb_result_def$f1_score, dt_result_def$f1_score, xgb_result_def$f1_score))
+
+print(model_results_df)
 ```
 
 # 4. Regression - If customer is not eligible for the input required amount and duration, what can be amount for the given duration
