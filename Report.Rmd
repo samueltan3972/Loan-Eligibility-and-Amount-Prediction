@@ -87,6 +87,9 @@ View(combined_training_testing)
 
 ## Write new combined dataset
 write.csv(combined_training_testing, "./Data/combined_training_testing.csv", row.names = FALSE)
+
+dataset = read.csv("./Data/combined_training_testing.csv")
+head(dataset)
 ```
 
 #### 1.2 Check and deal the missing value
@@ -251,6 +254,7 @@ y_test<-test_set$Loan_Status
 ```
 
 #### 3.1 Logistic Regression
+
 ```{r}
 #Building of model
 set.seed(1)
@@ -264,6 +268,7 @@ logistic_def_result <- get_performance_v1(y_test, logistic_def_pred)
 ```
 
 #### 3.2 Support Vector Machine
+
 ```{r}
 install.packages("e1071")
 
@@ -281,6 +286,7 @@ svm_result_def <- get_performance_v1(y_test, svm_pred_def)
 ```
 
 #### 3.3 Naive Bayes
+
 ```{r}
 #Install packages for data manipulation, visualization and model training
 install.packages("e1071")
@@ -301,6 +307,7 @@ nb_result_def <- get_performance_v1(y_test, nb_pred_def_numeric)
 ```
 
 #### 3.4 Decision Tree
+
 ```{r}
 #Install packages for data manipulation, visualization and model training
 install.packages("rpart")
@@ -318,6 +325,7 @@ dt_result_def <- get_performance_v1(y_test, dt_pred_def)
 ```
 
 #### 3.5 XGBoost
+
 ```{r}
 #Install packages for data manipulation, visualization and model training
 install.packages("xgboost")
@@ -340,6 +348,7 @@ xgb_result_def <- get_performance_v1(y_test, xgb_pred_def)
 ```
 
 #### Final result dataframe to evaluate all models under classification
+
 ```{r}
 model_results_df <- data.frame(
   +     Model = c("Logistic Regression", "SVM", "Naive Bayes", "Decision Tree", "XGBoost"),
@@ -351,14 +360,13 @@ model_results_df <- data.frame(
 
 # 4. Regression - If customer is not eligible for the input required amount and duration, what can be amount for the given duration
 
-5 Regression algorithms 
+5 Regression algorithms
 
-1. Linear Regression
-2. Random Forest
-3. XGBoost
-4. Support Vector Regression
-5. K-Nearest Neighbor)
-
+1.  Linear Regression
+2.  Random Forest
+3.  XGBoost
+4.  Support Vector Regression
+5.  K-Nearest Neighbor)
 
 #### Data import
 
@@ -630,13 +638,14 @@ df <- data.frame(Name,MSE,MAE,RMSE,R_SQUARED)
 print (df)
 ```
 
-
 ## Plotting of graphs
-#### Bar charts of performance metrices (RMSE and R_Squared) vs Regression models to show model comparisons.
 
-#### RMSE is the average deviation of the predictions from the observations. It is the measure of how well a regression line fits the data points. Lower RMSE value indicates a better fit of the model to the data as the differences between the predicted and true values are smaller.
+Bar charts of performance metrices (RMSE and R_Squared) vs Regression models to show model comparisons.
 
-#### R Squared is called the coefficient of determination. It provides goodness of fit of a regression model. The value 0 indicates for no-fit and 1 for perfect fit. 
+RMSE is the average deviation of the predictions from the observations. It is the measure of how well a regression line fits the data points. Lower RMSE value indicates a better fit of the model to the data as the differences between the predicted and true values are smaller.
+
+R Squared is called the coefficient of determination. It provides goodness of fit of a regression model. The value 0 indicates for no-fit and 1 for perfect fit.
+
 ```{r}
 library(ggplot2)
 #RMSE
@@ -663,7 +672,8 @@ ylab("Regression models")
 print('Value of 1 of R Squared indicates perfect fit, from the bar chart it is observed XGBoost-Grid Tuned model has the highest and nearest value to 1.')
 ```
 
-#### From the bar charts created, it is observed that Random Forest Default and XGBoost Grid Tuned models are the best two models. Thus these two models will be used to plot the Actual vs Predicted values of the models.
+From the bar charts created, it is observed that Random Forest Default and XGBoost Grid Tuned models are the best two models. Thus these two models will be used to plot the Actual vs Predicted values of the models.
+
 ```{r}
 # Predicted vs. Actual Values (XGBoost-Grid Tuned)
 options(scipen = 999)
@@ -685,13 +695,15 @@ abline(a=0, b=1)
 
 ## Comparison on XGBoost (Fine tuned parameters) and Random Forest (Default parameters)
 
-#### Overview on actual vs predictions of new loan amount using XGBoost tuned prediction model
+Overview on actual vs predictions of new loan amount using XGBoost tuned prediction model
+
 ```{r}
 data <- data.frame(actual= y_test, predicted=xgb_tuned_pred)
 head(data)
 ```
 
-####  Overview on actual vs predictions of new loan amount using Random Forest Default prediction model.
+Overview on actual vs predictions of new loan amount using Random Forest Default prediction model.
+
 ```{r}
 data1 <- data.frame(actual= y_test, predicted=rf_def_pred)
 head(data1)
