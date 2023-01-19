@@ -765,9 +765,8 @@ data1 <- data.frame(actual= y_test, predicted=rf_def_pred)
 head(data1)
 ```
 
----
+------------------------------------------------------------------------
 
 # Conclusion
 
-In conclusion, 
-
+In conclusion,
