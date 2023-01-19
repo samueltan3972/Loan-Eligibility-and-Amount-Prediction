@@ -187,35 +187,7 @@ glimpse(testing_set)
 
 # 2. EDA
 
-# 3. Modeling
-
-#### Prequel of modeling
-
-#### 3.1 Data import
-
-```{r cars}
-train_set = read.csv("./Data/reg_processed_training_set.csv")
-test_set = read.csv("./Data/reg_processed_testing_set.csv")
-head(train_set) # shows the first 6 rows of train set
-```
-
-#### 3.2 Split train set into data (x_train) and label(y_train)
-
-```{r}
-x_train = train_set[,!names(train_set) %in% c("LoanAmount","Loan_Status")]
-y_train = train_set$LoanAmount
-head(y_train)
-```
-
-#### 3.3 Split test set into data (x_test) and label(y_test)
-
-```{r}
-x_test=test_set[,!names(test_set) %in% c("LoanAmount","Loan_Status")]
-y_test=test_set$LoanAmount
-head(y_test)
-```
-
-# 4. Classification -
+# 3. Classification - To check loan eligibility of the customer
 
 5 Classification algorithms:
 
@@ -278,9 +250,139 @@ x_test<-test_set[,!names(test_set) %in% "Loan_Status"]
 y_test<-test_set$Loan_Status
 ```
 
-#### 4.1. Logistic Regression
+#### 3.1 Logistic Regression
+```{r}
+#Building of model
+set.seed(1)
+logistic_def <- glm(formula = y_train ~ ., data = x_train, family = "binomial")
 
-# 5. Regression - 5 Machine Learning algorithms (Linear Regression, Random Forest, XGBoost, Support Vector Regression, K-Nearest Neighbor)
+#Prediction using model
+logistic_def_pred <- predict(logistic_def, newdata = x_test, type = "response")
+
+#Evaluate model performance
+logistic_def_result <- get_performance_v1(y_test, logistic_def_pred)
+```
+
+#### 3.2 Support Vector Machine
+```{r}
+install.packages("e1071")
+
+library(e1071)
+
+#Building of model
+set.seed(1)
+svm_model_def <- svm(y_train ~ ., data = x_train, kernel = "linear", cost = 1)
+
+#Prediction using model
+svm_pred_def <- predict(svm_model_def, x_test)
+
+#Evaluate model performance
+svm_result_def <- get_performance_v1(y_test, svm_pred_def)
+```
+
+#### 3.3 Naive Bayes
+```{r}
+#Install packages for data manipulation, visualization and model training
+install.packages("e1071")
+
+library(e1071)
+library(caret)
+
+#Building of model
+set.seed(1)
+nb_model_def <- naiveBayes(x_train, y_train)
+
+#Prediction using model
+nb_pred_def <- predict(nb_model_def, x_test)
+
+#Evaluate model performance
+nb_pred_def_numeric <- as.numeric(nb_pred_def)
+nb_result_def <- get_performance_v1(y_test, nb_pred_def_numeric)
+```
+
+#### 3.4 Decision Tree
+```{r}
+#Install packages for data manipulation, visualization and model training
+install.packages("rpart")
+library(rpart)
+
+#Building of model
+set.seed(1)
+dt_model_def <- rpart(formula = y_train ~ ., data = x_train)
+
+#Prediction using model
+dt_pred_def <- predict(dt_model_def, x_test)
+
+#Evaluate model performance
+dt_result_def <- get_performance_v1(y_test, dt_pred_def)
+```
+
+#### 3.5 XGBoost
+```{r}
+#Install packages for data manipulation, visualization and model training
+install.packages("xgboost")
+
+library(xgboost)
+
+# convert data to matrix
+x_train_matrix <- as.matrix(x_train)
+x_test_matrix <- as.matrix(x_test)
+
+#Building of model
+set.seed(1)
+xgb_model_def <- xgboost(data = x_train_matrix, label = y_train, nrounds = 100, objective = "binary:logistic")
+
+#Prediction using model
+xgb_pred_def <- predict(xgb_model_def, x_test_matrix)
+
+#Evaluate model performance
+xgb_result_def <- get_performance_v1(y_test, xgb_pred_def)
+```
+
+#### Final result dataframe to evaluate all models under classification
+```{r}
+model_results_df <- data.frame(
+  +     Model = c("Logistic Regression", "SVM", "Naive Bayes", "Decision Tree", "XGBoost"),
+  +     Accuracy = c(logistic_def_result$accuracy, svm_result_def$accuracy, nb_result_def$accuracy, dt_result_def$accuracy, xgb_result_def$accuracy),
+  +     Precision = c(logistic_def_result$precision, svm_result_def$precision, nb_result_def$precision, dt_result_def$precision, xgb_result_def$precision),
+  +     Recall = c(logistic_def_result$recall, svm_result_def$recall, nb_result_def$recall, dt_result_def$recall, xgb_result_def$recall),
+  +     F1_Score = c(logistic_def_result$f1_score, svm_result_def$f1_score, nb_result_def$f1_score, dt_result_def$f1_score, xgb_result_def$f1_score))
+```
+
+# 4. Regression - If customer is not eligible for the input required amount and duration, what can be amount for the given duration
+
+5 Regression algorithms 
+
+1. Linear Regression
+2. Random Forest
+3. XGBoost
+4. Support Vector Regression
+5. K-Nearest Neighbor)
+
+
+#### Data import
+
+```{r cars}
+train_set = read.csv("./Data/reg_processed_training_set.csv")
+test_set = read.csv("./Data/reg_processed_testing_set.csv")
+head(train_set) # shows the first 6 rows of train set
+```
+
+#### Split train set into data (x_train) and label(y_train)
+
+```{r}
+x_train = train_set[,!names(train_set) %in% c("LoanAmount","Loan_Status")]
+y_train = train_set$LoanAmount
+head(y_train)
+```
+
+#### Split test set into data (x_test) and label(y_test)
+
+```{r}
+x_test=test_set[,!names(test_set) %in% c("LoanAmount","Loan_Status")]
+y_test=test_set$LoanAmount
+head(y_test)
+```
 
 #### Function-Customised function to be called
 
@@ -297,7 +399,7 @@ return(output)
 }
 ```
 
-#### 5.1 XGBoost
+#### 4.1 XGBoost
 
 #### Import Library
 
@@ -371,7 +473,7 @@ xgb_tuned_pred <- predict(xgb_tuned, x_test)
 xgboost_tuned_result=get_performance(y_test,xgb_tuned_pred)
 ```
 
-#### 5.2 Support Vector Regression (SVR)
+#### 4.2 Support Vector Regression (SVR)
 
 #### Support Vector Regression (SVR)-Default Parameters
 
@@ -409,7 +511,7 @@ svr_tuned_pred=predict(svr_tuned,x_test)
 svr_tuned_result=get_performance(y_test,svr_tuned_pred)
 ```
 
-#### 5.3 KNN
+#### 4.3 KNN
 
 #### KNN-Default Parameters
 
@@ -442,7 +544,7 @@ knn_tuned_pred=predict(knn_tuned,x_test)
 knn_tuned_result=get_performance(y_test,knn_tuned_pred)
 ```
 
-#### 5.4 Linear Regression(LM)
+#### 4.4 Linear Regression(LM)
 
 #### Linear Regression(LM)-Default Parameter
 
@@ -459,7 +561,7 @@ Model_testing <-predict(lm_model, x_test) # Apply model to make prediction on Te
 lm_def_result=get_performance(y_test,Model_testing)
 ```
 
-#### 5.5 Random Forest
+#### 4.5 Random Forest
 
 #### Random Forest(RF)-Deafult Parameters
 
@@ -488,36 +590,37 @@ tgrid <- expand.grid(
   min.node.size = c(5,10, 20)
 )
 
-rf_tuned=train(x = x_train, y = y_train,trControl = ctrl,method = "ranger",tuneGrid = tgrid)
+rf_tuned = train(x = x_train, y = y_train,trControl = ctrl,method = "ranger",tuneGrid = tgrid)
 rf_tuned
+
 # Apply model to make prediction on Testing set
-rf_tuned_predict=predict(rf_tuned, x_test)
-rf_tuned_result=get_performance(y_test,rf_tuned_predict)
+rf_tuned_predict = predict(rf_tuned, x_test)
+rf_tuned_result = get_performance(y_test, rf_tuned_predict)
 ```
 
 #### Final Result DataFrame
 
 ```{r}
-Name=c('XGBoost-Default','XGBosot-Grid Tuned','SVM Regression-Default','SVM Regression-Grid Tune','kNN-Default','kNN-Grid Tune','Linear Regression-Default','Random Forest-Default','Random Forest-Grid Tuned')
-MSE=c(xgboost_def_result[[1]],xgboost_tuned_result[[1]],
+Name = c('XGBoost-Default','XGBosot-Grid Tuned','SVM Regression-Default','SVM Regression-Grid Tune','kNN-Default','kNN-Grid Tune','Linear Regression-Default','Random Forest-Default','Random Forest-Grid Tuned')
+MSE = c(xgboost_def_result[[1]],xgboost_tuned_result[[1]],
       svr_def_result[[1]],svr_tuned_result[[1]],
       knn_def_result[[1]],knn_tuned_result[[1]],
       lm_def_result[[1]],
       rf_def_result[[1]],rf_tuned_result[[1]])
 
-MAE=c(xgboost_def_result[[2]],xgboost_tuned_result[[2]],
+MAE = c(xgboost_def_result[[2]],xgboost_tuned_result[[2]],
       svr_def_result[[2]],svr_tuned_result[[2]],
       knn_def_result[[2]],knn_tuned_result[[2]],
       lm_def_result[[2]],
       rf_def_result[[2]],rf_tuned_result[[2]])
 
-RMSE=c(xgboost_def_result[[3]],xgboost_tuned_result[[3]],
+RMSE = c(xgboost_def_result[[3]],xgboost_tuned_result[[3]],
       svr_def_result[[3]],svr_tuned_result[[3]],
       knn_def_result[[3]],knn_tuned_result[[3]],
       lm_def_result[[3]],
       rf_def_result[[3]],rf_tuned_result[[3]])
 
-R_SQUARED=c(xgboost_def_result[[4]],xgboost_tuned_result[[4]],
+R_SQUARED =c (xgboost_def_result[[4]],xgboost_tuned_result[[4]],
       svr_def_result[[4]],svr_tuned_result[[4]],
       knn_def_result[[4]],knn_tuned_result[[4]],
       lm_def_result[[4]],
