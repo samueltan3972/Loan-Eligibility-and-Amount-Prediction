@@ -629,3 +629,70 @@ R_SQUARED =c (xgboost_def_result[[4]],xgboost_tuned_result[[4]],
 df <- data.frame(Name,MSE,MAE,RMSE,R_SQUARED)
 print (df)
 ```
+
+
+## Plotting of graphs
+#### Bar charts of performance metrices (RMSE and R_Squared) vs Regression models to show model comparisons.
+
+#### RMSE is the average deviation of the predictions from the observations. It is the measure of how well a regression line fits the data points. Lower RMSE value indicates a better fit of the model to the data as the differences between the predicted and true values are smaller.
+
+#### R Squared is called the coefficient of determination. It provides goodness of fit of a regression model. The value 0 indicates for no-fit and 1 for perfect fit. 
+```{r}
+library(ggplot2)
+#RMSE
+ggplot(data=df, aes(x=RMSE, y=Name, fill = RMSE)) +
+geom_bar(stat="identity", width=0.8)+
+geom_text(aes(label=RMSE), vjust=-0.3, colour="white", size=3.0)+
+scale_colour_gradient2()+
+theme_classic()+  
+ggtitle("Regression models vs RMSE") +
+xlab("RMSE") +
+ylab("Regression models")
+
+print('Lower RMSE value indicates better fit of the model thus from the bar chart it is observed Random Forest Default model is the best model for this prediction.')
+
+# R_SQUARED
+ggplot(data=df, aes(x=R_SQUARED, y=Name, fill = R_SQUARED)) +
+geom_bar(stat="identity", width=0.8)+
+geom_text(aes(label=R_SQUARED), vjust=-0.3, colour="white", size=3.0)+
+scale_colour_gradient2()+
+theme_classic()+  
+ggtitle("Regression models vs R Squared") +
+xlab("R_SQUARED") +
+ylab("Regression models")
+print('Value of 1 of R Squared indicates perfect fit, from the bar chart it is observed XGBoost-Grid Tuned model has the highest and nearest value to 1.')
+```
+
+#### From the bar charts created, it is observed that Random Forest Default and XGBoost Grid Tuned models are the best two models. Thus these two models will be used to plot the Actual vs Predicted values of the models.
+```{r}
+# Predicted vs. Actual Values (XGBoost-Grid Tuned)
+options(scipen = 999)
+library(scales) 
+plot(x=xgb_tuned_pred, y= y_test,
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='Predicted vs. Actual Values (XGBoost-Grid Tuned)')
+abline(a=0, b=1)
+
+
+# Predicted vs. Actual Values (Random Forest-Default)
+plot(x=rf_def_pred, y= y_test,
+     xlab='Predicted Values',
+     ylab='Actual Values',
+     main='Predicted vs. Actual Values (Random Forest-Default)')
+abline(a=0, b=1)
+```
+
+## Comparison on XGBoost (Fine tuned parameters) and Random Forest (Default parameters)
+
+#### Overview on actual vs predictions of new loan amount using XGBoost tuned prediction model
+```{r}
+data <- data.frame(actual= y_test, predicted=xgb_tuned_pred)
+head(data)
+```
+
+####  Overview on actual vs predictions of new loan amount using Random Forest Default prediction model.
+```{r}
+data1 <- data.frame(actual= y_test, predicted=rf_def_pred)
+head(data1)
+```
