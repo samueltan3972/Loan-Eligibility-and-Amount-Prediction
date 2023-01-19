@@ -355,6 +355,24 @@ display: none;
 </div>
 
 
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<div id="problem-statement" class="section level2">
+<h2>Problem Statement</h2>
+<p>A bank wants to automate the loan eligibility process based on
+customer details submitted through online application form. The details
+filled by the customer are Gender, Marital Status, Education, Number of
+Dependents, Income of self and co applicant, Required Loan Amount,
+Required Loan Term, Credit History and others. The requirements are as
+follows:</p>
+<ol style="list-style-type: decimal">
+<li>Check eligibility of the Customer given the inputs described
+above.(Classification)</li>
+<li>If customer is not eligible for the input required amount and
+duration, what can be amount for the given duration.(Regression)</li>
+</ol>
+</div>
+</div>
 <div id="data-import" class="section level1">
 <h1>Data import</h1>
 <pre class="r"><code>train_set=read.csv(&quot;./Data/reg_processed_training_set.csv&quot;)
@@ -389,19 +407,20 @@ head(y_test)</code></pre>
 <pre><code>## [1] 267000  95000 110000  17000 110000 162000</code></pre>
 </div>
 </div>
-<div id="modelling" class="section level1">
-<h1>Modelling</h1>
-<div id="function" class="section level2">
-<h2>Function</h2>
-<pre class="r"><code>library(caret)</code></pre>
-<pre><code>## Loading required package: ggplot2</code></pre>
-<pre><code>## Loading required package: lattice</code></pre>
+<div id="regression-modelling--5-machine-learning-algorithms-linear-regression-random-forest-xgboost-support-vector-regression-k-nearest-neighbor" class="section level1">
+<h1>Regression Modelling -5 Machine Learning algorithms (Linear
+Regression, Random Forest, XGBoost, Support Vector Regression, K-Nearest
+Neighbor)</h1>
+<div id="function-customised-function-to-be-called" class="section level2">
+<h2>Function-Customised function to be called</h2>
 <pre class="r"><code>get_performance=function(arg1,arg2){
 mse = mean((arg1 - arg2)^2)
 mae = caret::MAE(arg1, arg2)
 rmse = caret::RMSE(arg1, arg2)
-cat(&quot;MSE: &quot;, mse, &quot;MAE: &quot;, mae, &quot; RMSE: &quot;, rmse)
-output=list(mse,mae,rmse)
+measure=postResample(pred = arg2, obs = arg1)
+r_squared=measure[2]
+cat(&quot;MSE: &quot;, mse, &quot;MAE: &quot;, mae, &quot; RMSE: &quot;, rmse,&quot;RSquared: &quot;,r_squared)
+output=list(mse,mae,rmse,r_squared)
 return (output)
 }</code></pre>
 </div>
@@ -409,13 +428,21 @@ return (output)
 <h2>XGBoost</h2>
 <div id="import-library" class="section level3">
 <h3>Import Library</h3>
+<pre class="r"><code>if(!require(&quot;xgboost&quot;)) { install.packages(&quot;xgboost&quot;)  }</code></pre>
+<pre><code>## Loading required package: xgboost</code></pre>
+<pre><code>## Warning: package &#39;xgboost&#39; was built under R version 4.2.2</code></pre>
+<pre class="r"><code>if(!require(&quot;caret&quot;)) { install.packages(&quot;caret&quot;)  }</code></pre>
+<pre><code>## Loading required package: caret</code></pre>
+<pre><code>## Warning: package &#39;caret&#39; was built under R version 4.2.2</code></pre>
+<pre><code>## Loading required package: ggplot2</code></pre>
+<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 4.2.2</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
 <pre class="r"><code>library(xgboost)
-library(caret)   
-
+library(caret)
 set.seed(1)</code></pre>
 </div>
-<div id="building-of-model" class="section level3">
-<h3>Building of model</h3>
+<div id="xgboost-default-parameters" class="section level3">
+<h3>XGBoost-Default Parameters</h3>
 <pre class="r"><code>xgb_train = xgb.DMatrix(data = as.matrix(x_train), label = y_train)
 xgb_test = xgb.DMatrix(data = as.matrix(x_test), label = y_test)
 xgboost_def = xgboost(data = xgb_train,nrounds =50)</code></pre>
@@ -469,15 +496,35 @@ xgboost_def = xgboost(data = xgb_train,nrounds =50)</code></pre>
 ## [48] train-rmse:13057.513269 
 ## [49] train-rmse:12787.889329 
 ## [50] train-rmse:12722.337303</code></pre>
-</div>
-<div id="prediction" class="section level3">
-<h3>Prediction</h3>
-<pre class="r"><code>xgboost_def_predict = predict(xgboost_def, xgb_test)</code></pre>
-</div>
-<div id="performance" class="section level3">
-<h3>Performance</h3>
-<pre class="r"><code>xgboost_def_result=get_performance(y_test,xgboost_def_predict)</code></pre>
-<pre><code>## MSE:  2846901115 MAE:  33934.7  RMSE:  53356.36</code></pre>
+<pre class="r"><code>xgboost_def</code></pre>
+<pre><code>## ##### xgb.Booster
+## raw: 134.2 Kb 
+## call:
+##   xgb.train(params = params, data = dtrain, nrounds = nrounds, 
+##     watchlist = watchlist, verbose = verbose, print_every_n = print_every_n, 
+##     early_stopping_rounds = early_stopping_rounds, maximize = maximize, 
+##     save_period = save_period, save_name = save_name, xgb_model = xgb_model, 
+##     callbacks = callbacks)
+## params (as set within xgb.train):
+##   validate_parameters = &quot;TRUE&quot;
+## xgb.attributes:
+##   niter
+## callbacks:
+##   cb.print.evaluation(period = print_every_n)
+##   cb.evaluation.log()
+## # of features: 9 
+## niter: 50
+## nfeatures : 9 
+## evaluation_log:
+##     iter train_rmse
+##        1  118902.82
+##        2   90397.65
+## ---                
+##       49   12787.89
+##       50   12722.34</code></pre>
+<pre class="r"><code>xgboost_def_predict = predict(xgboost_def, xgb_test)
+xgboost_def_result=get_performance(y_test,xgboost_def_predict)</code></pre>
+<pre><code>## MSE:  2846901115 MAE:  33934.7  RMSE:  53356.36 RSquared:  0.4855088</code></pre>
 <pre class="r"><code>xgboost_def_result</code></pre>
 <pre><code>## [[1]]
 ## [1] 2846901115
@@ -486,13 +533,16 @@ xgboost_def = xgboost(data = xgb_train,nrounds =50)</code></pre>
 ## [1] 33934.7
 ## 
 ## [[3]]
-## [1] 53356.36</code></pre>
+## [1] 53356.36
+## 
+## [[4]]
+##  Rsquared 
+## 0.4855088</code></pre>
 </div>
-</div>
-<div id="xgboost-gridsearchcv-hyperparamters-fine-tuning" class="section level2">
-<h2>XGBoost GridSearchCV Hyperparamters Fine Tuning</h2>
-<div id="parameters" class="section level3">
-<h3>Parameters</h3>
+<div id="xgboost-fine-tuned-with-gridsearchcv" class="section level3">
+<h3>XGBoost-Fine tuned with GridSearchCV</h3>
+<div id="parameters" class="section level4">
+<h4>Parameters</h4>
 <pre class="r"><code>grid_tune &lt;- expand.grid(
   nrounds = c(500,1000,1500), #number of trees
   max_depth = c(2,4,6),
@@ -503,10 +553,11 @@ xgboost_def = xgboost(data = xgb_train,nrounds =50)</code></pre>
   subsample = c(0.5, 0.75, 1.0) # used to prevent overfitting by sampling X% training
 )</code></pre>
 </div>
-<div id="grid-tuning" class="section level3">
-<h3>Grid tuning</h3>
-<pre class="r"><code>train_control &lt;- trainControl(method = &quot;cv&quot;, number=3,verboseIter = TRUE,allowParallel = TRUE)
+<div id="grid-tuning" class="section level4">
+<h4>Grid tuning</h4>
+<pre class="r"><code>train_control &lt;- trainControl(method = &quot;cv&quot;, number=10,verboseIter = TRUE,allowParallel = TRUE)
 
+#Commented as time consuming to run, but the best parameters are as below:
 #xgb_tune &lt;- train(x = x_train,y = y_train,trControl = train_control,tuneGrid = grid_tune,method= &quot;xgbTree&quot;,verbose = TRUE)
 
 #xgb_tune$bestTune
@@ -526,51 +577,103 @@ final_tune=expand.grid(
   ) 
 
 xgb_tuned &lt;- train(x = x_train,y = y_train,trControl = train_control,tuneGrid = final_tune,method= &quot;xgbTree&quot;,verbose = TRUE)</code></pre>
-<pre><code>## + Fold1: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
-## - Fold1: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
-## + Fold2: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
-## - Fold2: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
-## + Fold3: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
-## - Fold3: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+<pre><code>## + Fold01: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## - Fold01: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## + Fold02: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## - Fold02: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## + Fold03: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## - Fold03: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## + Fold04: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## - Fold04: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## + Fold05: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## - Fold05: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## + Fold06: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## - Fold06: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## + Fold07: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## - Fold07: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## + Fold08: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## - Fold08: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## + Fold09: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## - Fold09: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## + Fold10: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
+## - Fold10: nrounds=500, max_depth=2, eta=0.025, gamma=0.9, colsample_bytree=0.6, min_child_weight=3, subsample=0.5 
 ## Aggregating results
 ## Fitting final model on full training set</code></pre>
+<pre class="r"><code>xgb_tuned</code></pre>
+<pre><code>## eXtreme Gradient Boosting 
+## 
+## 587 samples
+##   9 predictor
+## 
+## No pre-processing
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 529, 529, 528, 529, 527, 529, ... 
+## Resampling results:
+## 
+##   RMSE      Rsquared   MAE     
+##   55730.84  0.4665394  35237.45
+## 
+## Tuning parameter &#39;nrounds&#39; was held constant at a value of 500
+## Tuning
+##  held constant at a value of 3
+## Tuning parameter &#39;subsample&#39; was held
+##  constant at a value of 0.5</code></pre>
 <pre class="r"><code># Prediction:
 xgb_tuned_pred &lt;- predict(xgb_tuned, x_test)
 xgboost_tuned_result=get_performance(y_test,xgb_tuned_pred)</code></pre>
-<pre><code>## MSE:  2016030626 MAE:  29931.15  RMSE:  44900.23</code></pre>
+<pre><code>## MSE:  2034389693 MAE:  30190.76  RMSE:  45104.21 RSquared:  0.6796888</code></pre>
 </div>
 </div>
-<div id="support-vector-regression" class="section level2">
-<h2>Support Vector Regression</h2>
-<div id="default-model" class="section level3">
-<h3>Default Model</h3>
-<pre class="r"><code>library(e1071)
-library(kernlab)</code></pre>
+</div>
+<div id="support-vector-regression-svr" class="section level2">
+<h2>Support Vector Regression (SVR)</h2>
+<div id="support-vector-regression-svr-default-parameters" class="section level3">
+<h3>Support Vector Regression (SVR)-Default Parameters</h3>
+<pre class="r"><code>if(!require(&quot;e1071&quot;)) { install.packages(&quot;e1071&quot;)  }</code></pre>
+<pre><code>## Loading required package: e1071</code></pre>
+<pre><code>## Warning: package &#39;e1071&#39; was built under R version 4.2.2</code></pre>
+<pre class="r"><code>if(!require(&quot;kernlab&quot;)) { install.packages(&quot;kernlab&quot;)  }</code></pre>
+<pre><code>## Loading required package: kernlab</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;kernlab&#39;</code></pre>
 <pre><code>## The following object is masked from &#39;package:ggplot2&#39;:
 ## 
 ##     alpha</code></pre>
-<pre class="r"><code>svr_def &lt;- svm(formula=y_train ~ . , data=x_train,method = &#39;svmRadial&#39;)
-svr_def_pred &lt;- predict(svr_def, x_test)
+<pre class="r"><code>library(e1071)
+library(kernlab)
+svr_def &lt;- svm(formula=y_train ~ . , data=x_train,method = &#39;svmRadial&#39;)
+svr_def</code></pre>
+<pre><code>## 
+## Call:
+## svm(formula = y_train ~ ., data = x_train, method = &quot;svmRadial&quot;)
+## 
+## 
+## Parameters:
+##    SVM-Type:  eps-regression 
+##  SVM-Kernel:  radial 
+##        cost:  1 
+##       gamma:  0.1111111 
+##     epsilon:  0.1 
+## 
+## 
+## Number of Support Vectors:  464</code></pre>
+<pre class="r"><code>svr_def_pred &lt;- predict(svr_def, x_test)
 svr_def_result=get_performance(y_test,svr_def_pred)</code></pre>
-<pre><code>## MSE:  4007850320 MAE:  33324.22  RMSE:  63307.59</code></pre>
+<pre><code>## MSE:  4007850320 MAE:  33324.22  RMSE:  63307.59 RSquared:  0.2698256</code></pre>
 </div>
-</div>
-<div id="support-vector-regression-gridsearchcv-hyperparamters-fine-tuning" class="section level2">
-<h2>Support Vector Regression GridSearchCV Hyperparamters Fine
-Tuning</h2>
-<div id="parameters-1" class="section level3">
-<h3>Parameters</h3>
+<div id="support-vector-regression-fine-tuned-with-gridsearchcv" class="section level3">
+<h3>Support Vector Regression-Fine tuned with GridSearchCV</h3>
+<div id="parameters-1" class="section level4">
+<h4>Parameters</h4>
 <pre class="r"><code>set.seed(1)
 svr_grid_tune &lt;- expand.grid(
   C = c(0.01, 0.25, 0.5, 1,10,100),
   sigma = 0.1
 )</code></pre>
 </div>
-<div id="grid-tuning-1" class="section level3">
-<h3>Grid tuning</h3>
-<pre class="r"><code>svr_train_control &lt;- trainControl(method = &quot;cv&quot;, number=3)
+<div id="grid-tuning-1" class="section level4">
+<h4>Grid tuning</h4>
+<pre class="r"><code>svr_train_control &lt;- trainControl(method = &quot;cv&quot;, number=10)
 svr_tuned &lt;- train(x = x_train,y = y_train,trControl = svr_train_control,tuneGrid = svr_grid_tune,method = &#39;svmRadial&#39;,verbose = TRUE)
 svr_tuned$bestTune</code></pre>
 <pre><code>##   sigma C
@@ -582,66 +685,54 @@ svr_tuned$bestTune</code></pre>
 ##   9 predictor
 ## 
 ## No pre-processing
-## Resampling: Cross-Validated (3 fold) 
-## Summary of sample sizes: 391, 392, 391 
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 530, 529, 529, 527, 528, 529, ... 
 ## Resampling results across tuning parameters:
 ## 
 ##   C       RMSE      Rsquared   MAE     
-##     0.01  76317.88  0.2005763  44365.02
-##     0.25  65030.94  0.3539903  36338.58
-##     0.50  63050.52  0.3625342  35348.82
-##     1.00  61012.62  0.3848758  34650.93
-##    10.00  62523.77  0.3548928  36466.66
-##   100.00  72005.84  0.2620980  42023.86
+##     0.01  74015.48  0.2393085  44041.64
+##     0.25  63394.62  0.3613805  36896.52
+##     0.50  61821.53  0.3712441  36150.81
+##     1.00  60781.88  0.3848524  35918.12
+##    10.00  61774.28  0.3973506  38338.92
+##   100.00  67524.91  0.3291279  41434.16
 ## 
 ## Tuning parameter &#39;sigma&#39; was held constant at a value of 0.1
 ## RMSE was used to select the optimal model using the smallest value.
 ## The final values used for the model were sigma = 0.1 and C = 1.</code></pre>
 <pre class="r"><code>svr_tuned_pred=predict(svr_tuned,x_test)
 svr_tuned_result=get_performance(y_test,svr_tuned_pred)</code></pre>
-<pre><code>## MSE:  3986749546 MAE:  33327.52  RMSE:  63140.71</code></pre>
+<pre><code>## MSE:  3986749546 MAE:  33327.52  RMSE:  63140.71 RSquared:  0.2735514</code></pre>
+</div>
 </div>
 </div>
 <div id="knn" class="section level2">
 <h2>KNN</h2>
-<div id="default" class="section level4">
-<h4>Default</h4>
+<div id="knn-default-parameters" class="section level3">
+<h3>KNN-Default Parameters</h3>
 <pre class="r"><code>knn_def = knnreg(x_train, y_train)
-str(knn_def)</code></pre>
-<pre><code>## List of 3
-##  $ learn  :List of 2
-##   ..$ y: num [1:587] 117100 66000 120000 141000 168000 ...
-##   ..$ X:&#39;data.frame&#39;:    587 obs. of  9 variables:
-##   .. ..$ Married          : int [1:587] 0 1 1 0 1 1 1 1 1 1 ...
-##   .. ..$ Dependents       : int [1:587] 0 0 0 0 2 1 2 2 2 2 ...
-##   .. ..$ Education        : int [1:587] 1 1 0 1 1 1 1 1 1 1 ...
-##   .. ..$ Self_Employed    : int [1:587] 0 1 0 0 0 0 0 0 0 0 ...
-##   .. ..$ ApplicantIncome  : num [1:587] 5849 3000 2583 6000 4006 ...
-##   .. ..$ CoapplicantIncome: num [1:587] 0 0 2358 0 1526 ...
-##   .. ..$ Loan_Amount_Term : int [1:587] 360 360 360 360 360 360 360 360 360 360 ...
-##   .. ..$ Credit_History   : int [1:587] 1 1 1 1 1 1 1 1 1 1 ...
-##   .. ..$ property_Area    : int [1:587] 3 3 3 3 3 3 3 3 3 3 ...
-##  $ k      : num 5
-##  $ theDots: list()
-##  - attr(*, &quot;class&quot;)= chr &quot;knnreg&quot;</code></pre>
+knn_def</code></pre>
+<pre><code>## 5-nearest neighbor regression model</code></pre>
 <pre class="r"><code>knn_def_pred = predict(knn_def, x_test)
 knn_def_result=get_performance(y_test,knn_def_pred)</code></pre>
-<pre><code>## MSE:  2453151133 MAE:  33295.4  RMSE:  49529.3</code></pre>
+<pre><code>## MSE:  2453151133 MAE:  33295.4  RMSE:  49529.3 RSquared:  0.5844338</code></pre>
 </div>
-<div id="parameters-2" class="section level3">
-<h3>Parameters</h3>
+<div id="knn-fine-tuned-with-gridsearchcv" class="section level3">
+<h3>KNN-Fine tuned with GridSearchCV</h3>
+<div id="parameters-2" class="section level4">
+<h4>Parameters</h4>
 <pre class="r"><code>set.seed(1)
 knn_grid_tune &lt;- expand.grid(
   k = 1:50
   )</code></pre>
 </div>
-<div id="grid-tuning-2" class="section level3">
-<h3>Grid tuning</h3>
-<pre class="r"><code>knn_train_control &lt;- trainControl(method = &quot;cv&quot;, number=3)
+<div id="grid-tuning-2" class="section level4">
+<h4>Grid tuning</h4>
+<pre class="r"><code>knn_train_control &lt;- trainControl(method = &quot;cv&quot;, number=10)
 knn_tuned &lt;- train(x = x_train,y = y_train,trControl = knn_train_control,tuneGrid = knn_grid_tune,method = &#39;knn&#39;,verbose = TRUE)
 knn_tuned$bestTune</code></pre>
 <pre><code>##     k
-## 30 30</code></pre>
+## 17 17</code></pre>
 <pre class="r"><code>knn_tuned</code></pre>
 <pre><code>## k-Nearest Neighbors 
 ## 
@@ -649,93 +740,240 @@ knn_tuned$bestTune</code></pre>
 ##   9 predictor
 ## 
 ## No pre-processing
-## Resampling: Cross-Validated (3 fold) 
-## Summary of sample sizes: 391, 392, 391 
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 530, 529, 529, 527, 528, 529, ... 
 ## Resampling results across tuning parameters:
 ## 
 ##   k   RMSE      Rsquared   MAE     
-##    1  86480.51  0.1435749  50368.96
-##    2  71752.95  0.2420418  41744.64
-##    3  68478.52  0.2839656  40486.14
-##    4  65725.28  0.3071873  39216.54
-##    5  64872.42  0.3166468  38639.67
-##    6  63888.70  0.3307613  38197.92
-##    7  63151.67  0.3401843  37622.91
-##    8  62386.81  0.3497538  36847.77
-##    9  62062.41  0.3547746  36522.17
-##   10  61649.30  0.3620603  36335.71
-##   11  61467.71  0.3644566  36263.16
-##   12  61752.58  0.3591503  36280.36
-##   13  61644.86  0.3628658  36110.56
-##   14  61564.50  0.3653088  35996.32
-##   15  62149.33  0.3522585  36074.56
-##   16  62297.93  0.3496633  36137.66
-##   17  62208.35  0.3528918  36139.56
-##   18  61879.03  0.3598404  36048.62
-##   19  61441.79  0.3695478  35853.38
-##   20  61377.92  0.3721973  35965.91
-##   21  61024.17  0.3815840  35912.57
-##   22  61063.28  0.3816469  35983.35
-##   23  61204.57  0.3798036  36020.94
-##   24  61045.61  0.3851347  35967.50
-##   25  61150.68  0.3841221  35994.10
-##   26  61195.69  0.3848371  35909.60
-##   27  61196.21  0.3861250  35823.17
-##   28  61280.24  0.3860795  35888.81
-##   29  61235.15  0.3888578  35915.31
-##   30  61020.73  0.3954341  35754.74
-##   31  61119.41  0.3928427  35758.18
-##   32  61301.45  0.3907380  35772.08
-##   33  61205.04  0.3949458  35725.16
-##   34  61365.55  0.3926386  35678.14
-##   35  61402.10  0.3921546  35632.02
-##   36  61433.77  0.3930041  35601.01
-##   37  61468.28  0.3932261  35613.62
-##   38  61536.20  0.3931083  35610.98
-##   39  61557.01  0.3934601  35560.44
-##   40  61605.51  0.3941024  35514.24
-##   41  61517.09  0.3975913  35471.29
-##   42  61549.02  0.3986939  35486.24
-##   43  61665.53  0.3979799  35499.55
-##   44  61825.48  0.3950264  35516.44
-##   45  61906.07  0.3950062  35470.55
-##   46  61920.25  0.3966045  35468.71
-##   47  61845.23  0.4006440  35500.30
-##   48  61946.71  0.3998247  35588.69
-##   49  61979.57  0.4004580  35604.20
-##   50  62050.58  0.4017559  35583.54
+##    1  78662.95  0.2413856  48871.43
+##    2  68535.53  0.2847212  42370.21
+##    3  63159.00  0.3438287  39735.41
+##    4  61298.27  0.3739457  37934.07
+##    5  61050.33  0.3703976  37815.33
+##    6  60556.56  0.3827635  37302.04
+##    7  60172.18  0.3912362  36747.92
+##    8  59048.38  0.4131367  35957.66
+##    9  58931.95  0.4174569  35900.28
+##   10  58651.99  0.4227405  35791.66
+##   11  58741.89  0.4183145  35855.21
+##   12  59434.13  0.4056682  36061.13
+##   13  58950.07  0.4154168  35890.81
+##   14  58640.92  0.4204920  35639.57
+##   15  58626.69  0.4212795  35812.90
+##   16  58380.29  0.4260234  35664.90
+##   17  58337.18  0.4259849  35658.11
+##   18  58375.64  0.4241451  35586.86
+##   19  58836.12  0.4143416  35581.14
+##   20  59040.86  0.4102611  35623.11
+##   21  58822.18  0.4156502  35509.51
+##   22  58909.20  0.4129735  35512.37
+##   23  58782.45  0.4157867  35375.31
+##   24  58783.96  0.4146178  35384.12
+##   25  58898.05  0.4127803  35431.87
+##   26  59085.83  0.4091517  35460.85
+##   27  59028.10  0.4117137  35431.92
+##   28  58908.54  0.4166069  35389.97
+##   29  58894.78  0.4179522  35422.42
+##   30  58818.10  0.4200219  35336.71
+##   31  58979.01  0.4180752  35494.06
+##   32  58814.60  0.4233695  35384.96
+##   33  58805.87  0.4233411  35403.88
+##   34  58742.11  0.4262176  35429.90
+##   35  58800.45  0.4244638  35499.67
+##   36  58849.10  0.4248850  35494.01
+##   37  58973.79  0.4225468  35534.53
+##   38  59005.51  0.4215183  35537.01
+##   39  59210.40  0.4172763  35587.21
+##   40  59236.00  0.4174628  35626.65
+##   41  59333.54  0.4161736  35647.02
+##   42  59327.64  0.4173560  35681.56
+##   43  59430.12  0.4161211  35687.99
+##   44  59537.65  0.4147756  35726.08
+##   45  59489.64  0.4167752  35673.74
+##   46  59475.93  0.4184815  35682.78
+##   47  59446.78  0.4204308  35644.50
+##   48  59516.73  0.4199596  35615.37
+##   49  59570.77  0.4196898  35583.56
+##   50  59621.01  0.4184801  35509.71
 ## 
 ## RMSE was used to select the optimal model using the smallest value.
-## The final value used for the model was k = 30.</code></pre>
+## The final value used for the model was k = 17.</code></pre>
 <pre class="r"><code>knn_tuned_pred=predict(knn_tuned,x_test)
 knn_tuned_result=get_performance(y_test,knn_tuned_pred)</code></pre>
-<pre><code>## MSE:  2837895195 MAE:  33818.8  RMSE:  53271.9</code></pre>
+<pre><code>## MSE:  2408505531 MAE:  32906.29  RMSE:  49076.53 RSquared:  0.6029896</code></pre>
+</div>
+</div>
+</div>
+<div id="linear-regressionlm" class="section level2">
+<h2>Linear Regression(LM)</h2>
+<div id="linear-regressionlm-default-parameter" class="section level3">
+<h3>Linear Regression(LM)-Default Parameter</h3>
+<pre class="r"><code># Build Training model
+lm_model &lt;- train(x = x_train, y = y_train,method = &quot;lm&quot;, trControl = trainControl(method=&#39;none&#39;))
+summary(lm_model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = .outcome ~ ., data = dat)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -326285  -27016   -2043   20829  387710 
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)       27844.0391 32060.3283   0.868 0.385488    
+## Married           19144.6603  5779.6736   3.312 0.000983 ***
+## Dependents         3490.6355  2690.0568   1.298 0.194941    
+## Education         14695.8061  6349.9415   2.314 0.021000 *  
+## Self_Employed     15562.2922  7816.0796   1.991 0.046945 *  
+## ApplicantIncome       7.7390     0.4927  15.708  &lt; 2e-16 ***
+## CoapplicantIncome     6.5316     1.2513   5.220  2.5e-07 ***
+## Loan_Amount_Term    120.2221    40.5186   2.967 0.003131 ** 
+## Credit_History    -5506.4211 27732.4876  -0.199 0.842681    
+## property_Area     -1358.7874  3214.7784  -0.423 0.672694    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 61310 on 577 degrees of freedom
+## Multiple R-squared:  0.3794, Adjusted R-squared:  0.3697 
+## F-statistic: 39.19 on 9 and 577 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code># Apply model for prediction
+#Model_training &lt;-predict(lm_model, x_train) # Apply model to make prediction on Training set
+Model_testing &lt;-predict(lm_model, x_test) # Apply model to make prediction on Testing set
+#summary(Model_testing)
+#summary(Model_training)
+lm_def_result=get_performance(y_test,Model_testing)</code></pre>
+<pre><code>## MSE:  2323922149 MAE:  33322.59  RMSE:  48207.08 RSquared:  0.5841559</code></pre>
+</div>
+</div>
+<div id="random-forest" class="section level2">
+<h2>Random Forest</h2>
+<div id="random-forestrf-deafult-parameters" class="section level3">
+<h3>Random Forest(RF)-Deafult Parameters</h3>
+<pre class="r"><code>library(randomForest)</code></pre>
+<pre><code>## Warning: package &#39;randomForest&#39; was built under R version 4.2.2</code></pre>
+<pre><code>## randomForest 4.7-1.1</code></pre>
+<pre><code>## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre><code>## 
+## Attaching package: &#39;randomForest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:ggplot2&#39;:
+## 
+##     margin</code></pre>
+<pre class="r"><code>library(caret)
+
+# Build Training model, bootstrap
+rf_def &lt;- train(x = x_train, y = y_train ,method = &quot;ranger&quot;)
+rf_def</code></pre>
+<pre><code>## Random Forest 
+## 
+## 587 samples
+##   9 predictor
+## 
+## No pre-processing
+## Resampling: Bootstrapped (25 reps) 
+## Summary of sample sizes: 587, 587, 587, 587, 587, 587, ... 
+## Resampling results across tuning parameters:
+## 
+##   mtry  splitrule   RMSE      Rsquared   MAE     
+##   2     variance    61171.28  0.3854042  37043.43
+##   2     extratrees  64537.92  0.3311477  39797.60
+##   5     variance    61012.87  0.3886650  36248.85
+##   5     extratrees  61319.21  0.3783389  36228.73
+##   9     variance    62533.60  0.3686968  37278.32
+##   9     extratrees  61719.33  0.3798786  36059.02
+## 
+## Tuning parameter &#39;min.node.size&#39; was held constant at a value of 5
+## RMSE was used to select the optimal model using the smallest value.
+## The final values used for the model were mtry = 5, splitrule = variance
+##  and min.node.size = 5.</code></pre>
+<pre class="r"><code>rf_def_pred=predict(rf_def,x_test)
+rf_def_result=get_performance(y_test,rf_def_pred)</code></pre>
+<pre><code>## MSE:  1906779792 MAE:  28869.96  RMSE:  43666.69 RSquared:  0.6640837</code></pre>
+</div>
+<div id="random-forestrf-fine-tuned-with-grid" class="section level3">
+<h3>Random Forest(RF)-Fine tuned with Grid</h3>
+<pre class="r"><code># K-Fold Cross Validation
+ctrl&lt;- trainControl(method=&quot;cv&quot;, number=10)
+# Hyperparameter Tuning
+
+tgrid &lt;- expand.grid(
+  mtry = 2:4,
+  splitrule = &quot;variance&quot;,
+  min.node.size = c(5,10, 20)
+)
+
+rf_tuned=train(x = x_train, y = y_train,trControl = ctrl,method = &quot;ranger&quot;,tuneGrid = tgrid)
+rf_tuned</code></pre>
+<pre><code>## Random Forest 
+## 
+## 587 samples
+##   9 predictor
+## 
+## No pre-processing
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 528, 527, 529, 530, 527, 528, ... 
+## Resampling results across tuning parameters:
+## 
+##   mtry  min.node.size  RMSE      Rsquared   MAE     
+##   2      5             59688.64  0.4330657  36778.47
+##   2     10             59586.98  0.4323890  36807.46
+##   2     20             59724.10  0.4336155  36905.78
+##   3      5             58928.92  0.4383705  35508.39
+##   3     10             59003.80  0.4371484  35744.29
+##   3     20             58652.03  0.4450373  35710.89
+##   4      5             59508.57  0.4298705  35755.98
+##   4     10             58884.00  0.4431726  35612.72
+##   4     20             59077.24  0.4390318  35578.58
+## 
+## Tuning parameter &#39;splitrule&#39; was held constant at a value of variance
+## RMSE was used to select the optimal model using the smallest value.
+## The final values used for the model were mtry = 3, splitrule = variance
+##  and min.node.size = 20.</code></pre>
+<pre class="r"><code># Apply model to make prediction on Testing set
+rf_tuned_predict=predict(rf_tuned, x_test)
+rf_tuned_result=get_performance(y_test,rf_tuned_predict)</code></pre>
+<pre><code>## MSE:  2302984870 MAE:  30682.54  RMSE:  47989.42 RSquared:  0.647577</code></pre>
 </div>
 </div>
 <div id="final-result-dataframe" class="section level2">
 <h2>Final Result DataFrame</h2>
-<pre class="r"><code>Name=c(&#39;XGBoost-Default&#39;,&#39;XGBosot-Grid Tuned&#39;,&#39;SVM Regression-Default&#39;,&#39;SVM Regression-Grid Tune&#39;,&#39;kNN-Default&#39;,&#39;kNN-Grid Tune&#39;)
+<pre class="r"><code>Name=c(&#39;XGBoost-Default&#39;,&#39;XGBosot-Grid Tuned&#39;,&#39;SVM Regression-Default&#39;,&#39;SVM Regression-Grid Tune&#39;,&#39;kNN-Default&#39;,&#39;kNN-Grid Tune&#39;,&#39;Linear Regression-Default&#39;,&#39;Random Forest-Default&#39;,&#39;Random Forest-Grid Tuned&#39;)
 MSE=c(xgboost_def_result[[1]],xgboost_tuned_result[[1]],
       svr_def_result[[1]],svr_tuned_result[[1]],
-      knn_def_result[[1]],knn_tuned_result[[1]])
+      knn_def_result[[1]],knn_tuned_result[[1]],
+      lm_def_result[[1]],
+      rf_def_result[[1]],rf_tuned_result[[1]])
 
 MAE=c(xgboost_def_result[[2]],xgboost_tuned_result[[2]],
       svr_def_result[[2]],svr_tuned_result[[2]],
-      knn_def_result[[2]],knn_tuned_result[[2]])
+      knn_def_result[[2]],knn_tuned_result[[2]],
+      lm_def_result[[2]],
+      rf_def_result[[2]],rf_tuned_result[[2]])
 
 RMSE=c(xgboost_def_result[[3]],xgboost_tuned_result[[3]],
       svr_def_result[[3]],svr_tuned_result[[3]],
-      knn_def_result[[3]],knn_tuned_result[[3]])
+      knn_def_result[[3]],knn_tuned_result[[3]],
+      lm_def_result[[3]],
+      rf_def_result[[3]],rf_tuned_result[[3]])
 
-df &lt;- data.frame(Name,MSE,MAE,RMSE)
+R_SQUARED=c(xgboost_def_result[[4]],xgboost_tuned_result[[4]],
+      svr_def_result[[4]],svr_tuned_result[[4]],
+      knn_def_result[[4]],knn_tuned_result[[4]],
+      lm_def_result[[4]],
+      rf_def_result[[4]],rf_tuned_result[[4]])
+
+df &lt;- data.frame(Name,MSE,MAE,RMSE,R_SQUARED)
 print (df)</code></pre>
-<pre><code>##                       Name        MSE      MAE     RMSE
-## 1          XGBoost-Default 2846901115 33934.70 53356.36
-## 2       XGBosot-Grid Tuned 2016030626 29931.15 44900.23
-## 3   SVM Regression-Default 4007850320 33324.22 63307.59
-## 4 SVM Regression-Grid Tune 3986749546 33327.52 63140.71
-## 5              kNN-Default 2453151133 33295.40 49529.30
-## 6            kNN-Grid Tune 2837895195 33818.80 53271.90</code></pre>
+<pre><code>##                        Name        MSE      MAE     RMSE R_SQUARED
+## 1           XGBoost-Default 2846901115 33934.70 53356.36 0.4855088
+## 2        XGBosot-Grid Tuned 2034389693 30190.76 45104.21 0.6796888
+## 3    SVM Regression-Default 4007850320 33324.22 63307.59 0.2698256
+## 4  SVM Regression-Grid Tune 3986749546 33327.52 63140.71 0.2735514
+## 5               kNN-Default 2453151133 33295.40 49529.30 0.5844338
+## 6             kNN-Grid Tune 2408505531 32906.29 49076.53 0.6029896
+## 7 Linear Regression-Default 2323922149 33322.59 48207.08 0.5841559
+## 8     Random Forest-Default 1906779792 28869.96 43666.69 0.6640837
+## 9  Random Forest-Grid Tuned 2302984870 30682.54 47989.42 0.6475770</code></pre>
 </div>
 </div>
 

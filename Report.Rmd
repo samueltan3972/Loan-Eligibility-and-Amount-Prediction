@@ -4,45 +4,303 @@ output: html_document
 date: "2022-12-29"
 ---
 
-# Data import
+# Introduction
+
+### Team member
+
+| Name                  | Student ID |
+|-----------------------|------------|
+| Samuel Tan Joo Woon   | S2196123   |
+| Chandra Mohan         | 22050516   |
+| Ng Boon Sheng         | 22050617   |
+| Nurul Auni            | 17098058   |
+| Siti Norhafiza Jahaya | S2181108   |
+
+## Project Objective
+
+A bank wants to automate the loan eligibility process based on customer details submitted through online application form. The details filled by the customer are Gender, Marital Status, Education, Number of Dependents, Income of self and co applicant, Required Loan Amount, Required Loan Term, Credit History and others. The requirements are as follows:
+
+1.  Check eligibility of the Customer given the inputs described above. (Classification)
+2.  If customer is not eligible for the input required amount and duration, what can be amount for the given duration. (Regression)
+
+## Project Methodology
+
+This project is using OSEMN model.
+
+**OBTAIN:** The dataset is obtain through [Kaggle](https://www.kaggle.com/datasets/yashpaloswal/loan-prediction-with-3-problem-statement). The link is as followed: <https://www.kaggle.com/datasets/yashpaloswal/loan-prediction-with-3-problem-statement>
+
+**SCRUB:** The dataset come with splitted training set, testing set and sample_submission in csv file. Some action have been taken in data cleaning process to clean and generate new training and testing set.
+
+1.  Combine training and testing set and sample_submission
+2.  Fill in missing value/Remove (Loan amount empty)
+3.  Convert to 100k unit on Loan Amount
+4.  Label or one-hot encoding for categorical data
+5.  Split into new training and testing set
+
+**EXPLORATORY:**
+
+**MODEL:**
+
+**INTEPRET:**
+
+------------------------------------------------------------------------
+
+# 1. Data Cleaning
+
+#### 1.0 Import the necessary library
+
+```{r}
+if(!require("dplyr")) { install.packages("dplyr")  }
+if(!require('sjmisc')) { install.packages('sjmisc') }
+if(!require('DescTools')) { install.packages('DescTools') }
+if(!require('VIM')) { install.packages('VIM') }
+
+library(dplyr)
+library('sjmisc')
+library('DescTools')
+library('VIM')
+
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+
+```
+
+#### 1.1 Combine dataset into one new dataset
+
+```{r}
+# Prequel: Combine all dataset into one new dataset
+training_set = read.csv("./Data/training_set.csv")
+testing_set = read.csv("./Data/testing_set.csv")
+sample_submission = read.csv("./Data/sample_submission.csv")
+
+head(sample_submission)
+head(testing_set)
+
+## combine testing set with its approval status
+combined_testing_sample = inner_join(testing_set, sample_submission[, c("Loan_ID", "Loan_Status")], by = "Loan_ID")
+head(combined_testing_sample)
+
+
+## Check if colnames is matched
+print(colnames(training_set) == colnames(combined_testing_sample))
+combined_training_testing = rbind(combined_testing_sample,training_set) %>% arrange(Loan_ID)
+View(combined_training_testing)
+
+## Write new combined dataset
+write.csv(combined_training_testing, "./Data/combined_training_testing.csv", row.names = FALSE)
+```
+
+#### 1.2 Check and deal the missing value
+
+```{r}
+# Check number of empty value in a dataset
+print.numOfEmtpyValue <- function(data) {
+  # create empty matrix
+  df <- data.frame(matrix(ncol = 2, nrow = 0))
+  colnames(df) = c("Column_Names", "Num_Of_Empty_Value")
+  
+  for(i in 1:ncol(data)) {
+    df[nrow(df) + 1,] <- c(colnames(data)[i], sum(is.na(data[, i])|is.null(data[, i])|data[, i] == ""))
+  }
+  print(df)
+}
+
+print.numOfEmtpyValue(dataset)
+View(dataset)
+```
+
+#### 1.3 Impute the missing value according to the attribute nature
+
+```{r}
+# 1.3.1 Sequential, Random Hot deck imputation on categorical Columns with less empty value (Married, Education)
+dataset = hotdeck(dataset, variable = c("Married"), domain_var = c("Gender", "Dependents", "Education", "Self_Employed", "Credit_History", "Loan_Status"), imp_var=FALSE)
+dataset = hotdeck(dataset, variable = c("Education"), domain_var = c("Gender", "Dependents", "Married", "Self_Employed", "Credit_History", "Loan_Status"), imp_var=FALSE)
+
+print.numOfEmtpyValue(dataset)
+
+# 1.3.2 KNN -> Dependents, Self_Employed, Credit_History, Loan_Amount_Term
+dataset = kNN(dataset, variable = c("Dependents"), dist_var = c("Gender", "Education", "Married", "Self_Employed", "Credit_History", "Loan_Status"), imp_var=FALSE)
+dataset = kNN(dataset, variable = c("Self_Employed"), dist_var = c("Gender", "Dependents", "Married", "Education", "Credit_History", "Loan_Status"), imp_var=FALSE)
+dataset = kNN(dataset, variable = c("Credit_History"), dist_var = c("Gender", "Dependents", "Married", "Self_Employed", "Education", "Loan_Status"), imp_var=FALSE)
+dataset = kNN(dataset, variable = c("Loan_Amount_Term"), dist_var = c("ApplicantIncome", "CoapplicantIncome", "LoanAmount", "property_Area", "Credit_History", "Loan_Status"), imp_var=FALSE)
+
+print.numOfEmtpyValue(dataset)
+
+# 1.3.3 Regression Imputation -> ApplicantIncome, CoapplicantIncome, LoanAmount
+dataset = regressionImp(ApplicantIncome~Gender+Self_Employed, data=dataset, imp_var=FALSE)
+dataset = regressionImp(LoanAmount~Gender+Dependents+Married+Self_Employed+ApplicantIncome+CoapplicantIncome+Credit_History+property_Area+Loan_Status, data=dataset, imp_var=FALSE)
+
+# 1.3.4 Replace NA value in "CoapplicantIncome" with 0 (default value)
+dataset["CoapplicantIncome"] = replace_na(dataset["CoapplicantIncome"], value=0)
+
+
+# Check on the missing value
+print.numOfEmtpyValue(dataset)
+```
+
+#### 1.4 Remove unnecessary column and Convert Loan Amount into 100k base
+
+```{r}
+# 1.4.1 Remove unimportant column
+dataset <- subset (dataset, select = -c(Loan_ID, Gender))
+
+# 1.4.2 Convert LoanAmount into 100k base
+dataset["LoanAmount"] = round(dataset["LoanAmount"] * 1000)
+
+head(dataset)
+```
+
+#### 1.5 Apply label encoding on the categorical data
+
+```{r}
+dataset$Married = ifelse(dataset$Married == "Yes", 1, 0)
+dataset['Dependents'][dataset['Dependents'] == "3+"] = 3
+dataset$Education = ifelse(dataset$Education == "Graduate", 1, 0)
+dataset$Self_Employed = ifelse(dataset$Self_Employed == "Yes", 1, 0)
+dataset$property_Area = as.numeric(factor(dataset$property_Area))
+dataset$Loan_Status = ifelse(dataset$Loan_Status == "Y", 1, 0)
+```
+
+#### 1.6 Split the data into new training and testing set
+
+```{r}
+# 1.6 Split into training and testing set
+sample <- sample(c(TRUE, FALSE), nrow(dataset), replace=TRUE, prob=c(0.8,0.2))
+training_set  <- dataset[sample, ]
+testing_set   <- dataset[!sample, ]
+
+write.csv(dataset, "./Data/processed_dataset.csv", row.names = FALSE)
+write.csv(training_set, "./Data/processed_training_set.csv", row.names = FALSE)
+write.csv(testing_set, "./Data/processed_testing_set.csv", row.names = FALSE)
+
+reg_dataset=dataset[dataset$Loan_Status==1,]
+reg_sample = sample(c(TRUE, FALSE), nrow(reg_dataset), replace=TRUE, prob=c(0.8,0.2))
+reg_training_set  = reg_dataset[reg_sample, ]
+reg_testing_set   = reg_dataset[!reg_sample, ]
+
+write.csv(reg_dataset, "./Data/reg_processed_dataset.csv", row.names = FALSE)
+write.csv(reg_training_set, "./Data/reg_processed_training_set.csv", row.names = FALSE)
+write.csv(reg_testing_set, "./Data/reg_processed_testing_set.csv", row.names = FALSE)
+
+glimpse(training_set)
+glimpse(testing_set)
+```
+
+# 2. EDA
+
+# 3. Modeling
+
+#### Prequel of modeling
+
+#### 3.1 Data import
+
 ```{r cars}
-train_set=read.csv("./Data/reg_processed_training_set.csv")
-test_set=read.csv("./Data/reg_processed_testing_set.csv")
+train_set = read.csv("./Data/reg_processed_training_set.csv")
+test_set = read.csv("./Data/reg_processed_testing_set.csv")
 head(train_set) # shows the first 6 rows of train set
 ```
 
-## Split train set into data (x_train) and label(y_train)
+#### 3.2 Split train set into data (x_train) and label(y_train)
+
 ```{r}
-x_train=train_set[,!names(train_set) %in% c("LoanAmount","Loan_Status")]
-y_train=train_set$LoanAmount
+x_train = train_set[,!names(train_set) %in% c("LoanAmount","Loan_Status")]
+y_train = train_set$LoanAmount
 head(y_train)
 ```
 
-## Split test set into data (x_test) and label(y_test)
+#### 3.3 Split test set into data (x_test) and label(y_test)
+
 ```{r}
 x_test=test_set[,!names(test_set) %in% c("LoanAmount","Loan_Status")]
 y_test=test_set$LoanAmount
 head(y_test)
 ```
 
-# Regression Modelling -5 Machine Learning algorithms (Linear Regression, Random Forest, XGBoost, Support Vector Regression, K-Nearest Neighbor)
+# 4. Classification -
 
-## Function-Customised function to be called
+5 Classification algorithms:
+
+1.  Logistic Regression
+2.  Support Vector Machine
+3.  Naive Bayes
+4.  Decision Tree
+5.  XGBoost
+
+#### Install packages for data manipulation, visualization and model training
+
 ```{r}
-get_performance=function(arg1,arg2){
-mse = mean((arg1 - arg2)^2)
-mae = caret::MAE(arg1, arg2)
-rmse = caret::RMSE(arg1, arg2)
-measure=postResample(pred = arg2, obs = arg1)
-r_squared=measure[2]
-cat("MSE: ", mse, "MAE: ", mae, " RMSE: ", rmse,"RSquared: ",r_squared)
-output=list(mse,mae,rmse,r_squared)
-return (output)
+install.packages("tidyverse")
+install.packages("caret")
+install.packages("MLmetrics")
+
+library(tidyverse)
+library(caret)
+library(MLmetrics)
+```
+
+#### Performance function
+
+```{r}
+
+get_performance_v1 <- function(y_true, y_pred){
+  library(MLmetrics)
+  # Convert predicted probabilities to binary labels
+  y_pred_binary <- as.factor(ifelse(y_pred > 0.5, "1", "0"))
+  # Convert true labels to factor
+  y_true <- as.factor(y_true)
+  # Make sure that the levels of y_true and y_pred_binary are the same
+  levels(y_pred_binary) <- levels(y_true)
+  # Confusion matrix
+  cm <- confusionMatrix(y_pred_binary, y_true)
+  # Accuracy
+  acc <- cm$overall[1]
+  # Precision
+  prec <- cm$byClass[1]
+  # Recall
+  rec <- cm$byClass[2]
+  # F1-score
+  f1 <- F1_Score(y_pred_binary, y_true)
+  # Return a list of evaluation metrics
+  return(list(accuracy = acc, precision = prec, recall = rec, f1_score = f1, confusion_matrix = cm))
 }
 ```
 
-## XGBoost 
-### Import Library
+```{r}
+#Read split dataset
+train_set <- read.csv("processed_training_set.csv")
+test_set <- read.csv("processed_testing_set.csv")
+
+# Split train set into data (x_train) and target(y_train)
+x_train <- train_set[,!names(train_set) %in% "Loan_Status"]
+y_train=train_set$Loan_Status
+
+# Split test set into data (x_test) and target(y_test)
+x_test<-test_set[,!names(test_set) %in% "Loan_Status"]
+y_test<-test_set$Loan_Status
+```
+
+#### 4.1. Logistic Regression
+
+# 5. Regression - 5 Machine Learning algorithms (Linear Regression, Random Forest, XGBoost, Support Vector Regression, K-Nearest Neighbor)
+
+#### Function-Customised function to be called
+
+```{r}
+get_performance = function(arg1, arg2){
+mse = mean((arg1 - arg2) ^ 2)
+mae = caret::MAE(arg1, arg2)
+rmse = caret::RMSE(arg1, arg2)
+measure = postResample(pred = arg2, obs = arg1)
+r_squared = measure[2]
+cat("MSE: ", mse, "MAE: ", mae, " RMSE: ", rmse,"RSquared: ", r_squared)
+output = list(mse,mae,rmse,r_squared)
+return(output)
+}
+```
+
+#### 5.1 XGBoost
+
+#### Import Library
+
 ```{r}
 if(!require("xgboost")) { install.packages("xgboost")  }
 if(!require("caret")) { install.packages("caret")  }
@@ -50,7 +308,9 @@ library(xgboost)
 library(caret)
 set.seed(1)
 ```
-### XGBoost-Default Parameters
+
+#### XGBoost-Default Parameters
+
 ```{r}
 xgb_train = xgb.DMatrix(data = as.matrix(x_train), label = y_train)
 xgb_test = xgb.DMatrix(data = as.matrix(x_test), label = y_test)
@@ -61,8 +321,10 @@ xgboost_def_result=get_performance(y_test,xgboost_def_predict)
 xgboost_def_result
 ```
 
-### XGBoost-Fine tuned with GridSearchCV
+#### XGBoost-Fine tuned with GridSearchCV
+
 #### Parameters
+
 ```{r}
 grid_tune <- expand.grid(
   nrounds = c(500,1000,1500), #number of trees
@@ -74,7 +336,9 @@ grid_tune <- expand.grid(
   subsample = c(0.5, 0.75, 1.0) # used to prevent overfitting by sampling X% training
 )
 ```
+
 #### Grid tuning
+
 ```{r}
 train_control <- trainControl(method = "cv", number=10,verboseIter = TRUE,allowParallel = TRUE)
 
@@ -107,8 +371,10 @@ xgb_tuned_pred <- predict(xgb_tuned, x_test)
 xgboost_tuned_result=get_performance(y_test,xgb_tuned_pred)
 ```
 
-## Support Vector Regression (SVR)
-### Support Vector Regression (SVR)-Default Parameters
+#### 5.2 Support Vector Regression (SVR)
+
+#### Support Vector Regression (SVR)-Default Parameters
+
 ```{r}
 if(!require("e1071")) { install.packages("e1071")  }
 if(!require("kernlab")) { install.packages("kernlab")  }
@@ -120,8 +386,10 @@ svr_def_pred <- predict(svr_def, x_test)
 svr_def_result=get_performance(y_test,svr_def_pred)
 ```
 
-### Support Vector Regression-Fine tuned with GridSearchCV
+#### Support Vector Regression-Fine tuned with GridSearchCV
+
 #### Parameters
+
 ```{r}
 set.seed(1)
 svr_grid_tune <- expand.grid(
@@ -129,7 +397,9 @@ svr_grid_tune <- expand.grid(
   sigma = 0.1
 )
 ```
+
 #### Grid tuning
+
 ```{r}
 svr_train_control <- trainControl(method = "cv", number=10)
 svr_tuned <- train(x = x_train,y = y_train,trControl = svr_train_control,tuneGrid = svr_grid_tune,method = 'svmRadial',verbose = TRUE)
@@ -138,23 +408,31 @@ svr_tuned
 svr_tuned_pred=predict(svr_tuned,x_test)
 svr_tuned_result=get_performance(y_test,svr_tuned_pred)
 ```
-## KNN 
-### KNN-Default Parameters
+
+#### 5.3 KNN
+
+#### KNN-Default Parameters
+
 ```{r}
 knn_def = knnreg(x_train, y_train)
 knn_def
 knn_def_pred = predict(knn_def, x_test)
 knn_def_result=get_performance(y_test,knn_def_pred)
 ```
-### KNN-Fine tuned with GridSearchCV
+
+#### KNN-Fine tuned with GridSearchCV
+
 #### Parameters
+
 ```{r}
 set.seed(1)
 knn_grid_tune <- expand.grid(
   k = 1:50
   )
 ```
+
 #### Grid tuning
+
 ```{r}
 knn_train_control <- trainControl(method = "cv", number=10)
 knn_tuned <- train(x = x_train,y = y_train,trControl = knn_train_control,tuneGrid = knn_grid_tune,method = 'knn',verbose = TRUE)
@@ -164,8 +442,10 @@ knn_tuned_pred=predict(knn_tuned,x_test)
 knn_tuned_result=get_performance(y_test,knn_tuned_pred)
 ```
 
-## Linear Regression(LM)
-### Linear Regression(LM)-Default Parameter
+#### 5.4 Linear Regression(LM)
+
+#### Linear Regression(LM)-Default Parameter
+
 ```{r}
 # Build Training model
 lm_model <- train(x = x_train, y = y_train,method = "lm", trControl = trainControl(method='none'))
@@ -179,8 +459,10 @@ Model_testing <-predict(lm_model, x_test) # Apply model to make prediction on Te
 lm_def_result=get_performance(y_test,Model_testing)
 ```
 
-## Random Forest
-### Random Forest(RF)-Deafult Parameters
+#### 5.5 Random Forest
+
+#### Random Forest(RF)-Deafult Parameters
+
 ```{r}
 
 library(randomForest)
@@ -194,6 +476,7 @@ rf_def_result=get_performance(y_test,rf_def_pred)
 ```
 
 ### Random Forest(RF)-Fine tuned with Grid
+
 ```{r}
 # K-Fold Cross Validation
 ctrl<- trainControl(method="cv", number=10)
@@ -212,8 +495,8 @@ rf_tuned_predict=predict(rf_tuned, x_test)
 rf_tuned_result=get_performance(y_test,rf_tuned_predict)
 ```
 
+#### Final Result DataFrame
 
-## Final Result DataFrame
 ```{r}
 Name=c('XGBoost-Default','XGBosot-Grid Tuned','SVM Regression-Default','SVM Regression-Grid Tune','kNN-Default','kNN-Grid Tune','Linear Regression-Default','Random Forest-Default','Random Forest-Grid Tuned')
 MSE=c(xgboost_def_result[[1]],xgboost_tuned_result[[1]],

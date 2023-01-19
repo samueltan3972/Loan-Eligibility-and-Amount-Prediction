@@ -164,9 +164,6 @@ write.csv(reg_training_set, "./Data/reg_processed_training_set.csv", row.names =
 write.csv(reg_testing_set, "./Data/reg_processed_testing_set.csv", row.names = FALSE)
 
 # 2. EDA
-
-Dear CM
-
 summary(df)
 #programming for data science
 
@@ -191,8 +188,8 @@ library(ggplot2)
 library(tidyverse)
 
 # Checking Missing Values from Dataset : df
-num_na<-sapply(df, function(x) sum(is.na(x)))
-num_na[num_na>0]
+num_na <- sapply(df, function(x) sum(is.na(x)))
+num_na[num_na > 0]
 
 #distribution of Applications Income
 ggplot(df , aes(x=ApplicantIncome,bins=5,fill=Loan_Status))+
@@ -216,7 +213,7 @@ ggplot(data = df, aes(LoanAmount)) + geom_histogram(binwidth = 10000)
 # 3. Model
  
 #3.1. Logistic Regression
-#Install packages for data manipulation, visualization and model training
+# Install packages for data manipulation, visualization and model training
 install.packages("tidyverse")
 install.packages("caret")
 install.packages("MLmetrics")
