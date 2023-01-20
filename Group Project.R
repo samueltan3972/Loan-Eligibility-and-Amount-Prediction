@@ -166,8 +166,10 @@ write.csv(reg_training_set, "./Data/reg_processed_training_set.csv", row.names =
 write.csv(reg_testing_set, "./Data/reg_processed_testing_set.csv", row.names = FALSE)
 
 # # 2. EDA
+
+### Summary of dataset used for this project
 summary(dataset)
-#programming for data science
+
 
 
 # Exploratory data anaysis
@@ -189,18 +191,18 @@ install.packages('ggplot')
 library(ggplot2)
 library(tidyverse)
 
-# Checking Missing Values from Dataset : df
+### Checked if there is any missing values in the processed dataset. Upon checking it is confirmed that there is no missing values in the data
 num_na <- sapply(df, function(x) sum(is.na(x)))
 num_na[num_na > 0]
 
-#distribution of Applications Income
+###distribution of Applications Income
 ggplot(df , aes(x=ApplicantIncome,bins=5,fill=Loan_Status))+
   geom_histogram()+theme_bw()+
   labs(x="Income of Applicants",
        y= "Number of Applicants",
        title ="Distribution of Applicant's Income")
 
-# Number of Married People
+### Number of Married People
 plot.married <- ggplot(df, aes(x = Married, fill = Loan_Status)) +
   geom_bar()
 
@@ -208,7 +210,10 @@ ggplot(df, aes(x = Education, fill = Loan_Status)) +
   geom_bar(position = "fill") +
   labs(y = "Approval Status", x = 'Education Level') + ggtitle(' Education level vs Loan Status')
 
-  #Education Level seems like does not make any difference.
+###From the chart, it is clear that education level does not show clear advantage on the loan approval
+                 
+sns.boxplot(x='Education',y='ApplicantIncome',data=df)
+### From this boxplot we can conclude that applicants with high incomes are mostly well educated.                
 
 ggplot(data = df, aes(LoanAmount)) + geom_histogram(binwidth = 10000)
 
