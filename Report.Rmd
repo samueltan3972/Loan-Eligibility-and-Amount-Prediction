@@ -167,6 +167,7 @@ dataset$Loan_Status = ifelse(dataset$Loan_Status == "Y", 1, 0)
 
 ```{r}
 # 1.6 Split into training and testing set
+set.seed(1)
 sample <- sample(c(TRUE, FALSE), nrow(dataset), replace=TRUE, prob=c(0.8,0.2))
 training_set  <- dataset[sample, ]
 testing_set   <- dataset[!sample, ]
@@ -193,8 +194,10 @@ glimpse(testing_set)
 #### Import library
 
 ```{r}
-install.packages('ggplot', repos = "http://cran.us.r-project.org")
-install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+#install.packages('ggplot', repos = "http://cran.us.r-project.org")
+#install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+if(!require("ggplot2")) { install.packages("ggplot2")  }
+if(!require('tidyverse')) { install.packages('tidyverse') }
 
 library(ggplot2)
 library(tidyverse)
@@ -265,9 +268,12 @@ ggplot(data = df, aes(LoanAmount)) + geom_histogram(binwidth = 10000)
 #### Install packages for data manipulation, visualization and model training
 
 ```{r}
-install.packages("tidyverse", repos = "http://cran.us.r-project.org")
-install.packages("caret", repos = "http://cran.us.r-project.org")
-install.packages("MLmetrics", repos = "http://cran.us.r-project.org")
+#install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+#install.packages("caret", repos = "http://cran.us.r-project.org")
+#install.packages("MLmetrics", repos = "http://cran.us.r-project.org")
+if(!require("tidyverse")) { install.packages("tidyverse")  }
+if(!require("caret")) { install.packages("caret")  }
+if(!require('MLmetrics')) { install.packages('MLmetrics') }
 
 library(tidyverse)
 library(caret)
@@ -332,8 +338,8 @@ logistic_def_result <- get_performance_v1(y_test, logistic_def_pred)
 #### 3.2 Support Vector Machine
 
 ```{r}
-install.packages("e1071", repos = "http://cran.us.r-project.org")
-
+#install.packages("e1071", repos = "http://cran.us.r-project.org")
+if(!require('e1071')) { install.packages('e1071') }
 library(e1071)
 
 #Building of model
@@ -366,7 +372,9 @@ nb_result_def <- get_performance_v1(y_test, nb_pred_def_numeric)
 
 ```{r}
 #Install packages for data manipulation, visualization and model training
-install.packages("rpart", repos = "http://cran.us.r-project.org")
+#install.packages("rpart", repos = "http://cran.us.r-project.org")
+
+if(!require('rpart')) { install.packages('rpart') }
 library(rpart)
 
 #Building of model
@@ -384,8 +392,8 @@ dt_result_def <- get_performance_v1(y_test, dt_pred_def)
 
 ```{r}
 #Install packages for data manipulation, visualization and model training
-install.packages("xgboost", repos = "http://cran.us.r-project.org")
-
+#install.packages("xgboost", repos = "http://cran.us.r-project.org")
+if(!require('xgboost')) { install.packages('xgboost') }
 library(xgboost)
 
 # convert data to matrix
@@ -420,11 +428,11 @@ print(model_results_df)
 
 5 Regression algorithms
 
-1.  Linear Regression
-2.  Random Forest
-3.  XGBoost
-4.  Support Vector Regression
-5.  K-Nearest Neighbor)
+1.  XGBoost
+2.  Support Vector Regression
+3.  K-Nearest Neighbor
+4.  Linear Regression
+5.  Random Forest
 
 #### Data import
 
@@ -483,10 +491,9 @@ set.seed(1)
 xgb_train = xgb.DMatrix(data = as.matrix(x_train), label = y_train)
 xgb_test = xgb.DMatrix(data = as.matrix(x_test), label = y_test)
 xgboost_def = xgboost(data = xgb_train,nrounds =50)
-xgboost_def
+#xgboost_def
 xgboost_def_predict = predict(xgboost_def, xgb_test)
 xgboost_def_result=get_performance(y_test,xgboost_def_predict)
-xgboost_def_result
 ```
 
 #### XGBoost-Fine tuned with GridSearchCV
@@ -506,7 +513,7 @@ grid_tune <- expand.grid(
 ```
 
 #### Grid tuning
-
+This step is commented due to grid tuning requires long time to complete during every compilation, thus only the best parameters tuned (ran previously) are stored and will be implemented in this project.
 ```{r}
 train_control <- trainControl(method = "cv", number=10,verboseIter = TRUE,allowParallel = TRUE)
 
@@ -516,12 +523,8 @@ train_control <- trainControl(method = "cv", number=10,verboseIter = TRUE,allowP
 #xgb_tune$bestTune
 #xgb_tune
 ```
-
+RMSE was used to select the optimal model using the smallest value. The final values used for the model were nrounds = 500, max_depth = 2, eta = 0.025, gamma = 0.9, colsample_bytree = 0.6, min_child_weight = 3 and subsample = 0.5.
 ```{r}
-# RMSE was used to select the optimal model using the smallest value.
-# The final values used for the model were nrounds = 500, max_depth = 2, eta
-#= 0.025, gamma = 0.9, colsample_bytree = 0.6, min_child_weight = 3
-#and subsample = 0.5.
 final_tune=expand.grid(
   nrounds = 500,
   max_depth = 2,
@@ -533,14 +536,12 @@ final_tune=expand.grid(
   ) 
 
 xgb_tuned <- train(x = x_train,y = y_train,trControl = train_control,tuneGrid = final_tune,method= "xgbTree",verbose = TRUE)
-xgb_tuned
-# Prediction:
+#xgb_tuned
 xgb_tuned_pred <- predict(xgb_tuned, x_test)
 xgboost_tuned_result=get_performance(y_test,xgb_tuned_pred)
 ```
 
 #### 4.2 Support Vector Regression (SVR)
-
 #### Support Vector Regression (SVR)-Default Parameters
 
 ```{r}
@@ -549,7 +550,7 @@ if(!require("kernlab")) { install.packages("kernlab")  }
 library(e1071)
 library(kernlab)
 svr_def <- svm(formula=y_train ~ . , data=x_train,method = 'svmRadial')
-svr_def
+#svr_def
 svr_def_pred <- predict(svr_def, x_test)
 svr_def_result=get_performance(y_test,svr_def_pred)
 ```
@@ -571,8 +572,8 @@ svr_grid_tune <- expand.grid(
 ```{r}
 svr_train_control <- trainControl(method = "cv", number=10)
 svr_tuned <- train(x = x_train,y = y_train,trControl = svr_train_control,tuneGrid = svr_grid_tune,method = 'svmRadial',verbose = TRUE)
-svr_tuned$bestTune
-svr_tuned
+#svr_tuned$bestTune
+#svr_tuned
 svr_tuned_pred=predict(svr_tuned,x_test)
 svr_tuned_result=get_performance(y_test,svr_tuned_pred)
 ```
@@ -583,7 +584,7 @@ svr_tuned_result=get_performance(y_test,svr_tuned_pred)
 
 ```{r}
 knn_def = knnreg(x_train, y_train)
-knn_def
+#knn_def
 knn_def_pred = predict(knn_def, x_test)
 knn_def_result=get_performance(y_test,knn_def_pred)
 ```
@@ -604,8 +605,8 @@ knn_grid_tune <- expand.grid(
 ```{r}
 knn_train_control <- trainControl(method = "cv", number=10)
 knn_tuned <- train(x = x_train,y = y_train,trControl = knn_train_control,tuneGrid = knn_grid_tune,method = 'knn',verbose = TRUE)
-knn_tuned$bestTune
-knn_tuned
+#knn_tuned$bestTune
+#knn_tuned
 knn_tuned_pred=predict(knn_tuned,x_test)
 knn_tuned_result=get_performance(y_test,knn_tuned_pred)
 ```
@@ -632,13 +633,12 @@ lm_def_result=get_performance(y_test,Model_testing)
 #### Random Forest (RF) - Deafult Parameters
 
 ```{r}
-
 library(randomForest)
 library(caret)
 
 # Build Training model, bootstrap
 rf_def <- train(x = x_train, y = y_train ,method = "ranger")
-rf_def
+#rf_def
 rf_def_pred=predict(rf_def,x_test)
 rf_def_result=get_performance(y_test,rf_def_pred)
 ```
@@ -657,7 +657,7 @@ tgrid <- expand.grid(
 )
 
 rf_tuned = train(x = x_train, y = y_train,trControl = ctrl,method = "ranger",tuneGrid = tgrid)
-rf_tuned
+#rf_tuned
 
 # Apply model to make prediction on Testing set
 rf_tuned_predict = predict(rf_tuned, x_test)
@@ -665,7 +665,7 @@ rf_tuned_result = get_performance(y_test, rf_tuned_predict)
 ```
 
 #### Final Result DataFrame
-
+A summary of the regression mdodels developed on respective Mean Square Error (MSE), Mean Absolute Error (MAE). Root Mean Square Error (RMSE) and R Squared values.
 ```{r}
 Name = c('XGBoost-Default','XGBosot-Grid Tuned','SVM Regression-Default','SVM Regression-Grid Tune','kNN-Default','kNN-Grid Tune','Linear Regression-Default','Random Forest-Default','Random Forest-Grid Tuned')
 MSE = c(xgboost_def_result[[1]],xgboost_tuned_result[[1]],
@@ -712,25 +712,28 @@ geom_bar(stat="identity", width=0.8)+
 geom_text(aes(label=RMSE), vjust=-0.3, colour="white", size=3.0)+
 scale_colour_gradient2()+
 theme_classic()+  
-ggtitle("Regression models vs RMSE") +
+ggtitle("RMSE value on different regression models") +
 xlab("RMSE") +
 ylab("Regression models")
+```
 
-print('Lower RMSE value indicates better fit of the model thus from the bar chart it is observed Random Forest Default model is the best model for this prediction.')
+Lower RMSE value indicates better fit of the model thus from the bar chart it is observed XGBoost-Grid Tuned model is the best model for this prediction.
 
+```{r}
 # R_SQUARED
 ggplot(data=df, aes(x=R_SQUARED, y=Name, fill = R_SQUARED)) +
 geom_bar(stat="identity", width=0.8)+
 geom_text(aes(label=R_SQUARED), vjust=-0.3, colour="white", size=3.0)+
 scale_colour_gradient2()+
 theme_classic()+  
-ggtitle("Regression models vs R Squared") +
-xlab("R_SQUARED") +
+ggtitle("R Squared value on different regression model") +
+xlab("R Squared") +
 ylab("Regression models")
-print('Value of 1 of R Squared indicates perfect fit, from the bar chart it is observed XGBoost-Grid Tuned model has the highest and nearest value to 1.')
 ```
 
-From the bar charts created, it is observed that Random Forest Default and XGBoost Grid Tuned models are the best two models. Thus these two models will be used to plot the Actual vs Predicted values of the models.
+Value of 1 of R Squared indicates perfect fit, from the bar chart it is observed XGBoost-Grid Tuned model has the highest and nearest value to 1.
+
+Based on the visualization from the RMSE and RSquared Charts plotted, it is observed that XGBoost-Grid Tuned model has the lowest RMSE value and highest R Squared value, thus it will be selected as the final model for loan amount approval prediction regression model. The comparison between actual and predicted value on the test set is plotted:
 
 ```{r}
 # Predicted vs. Actual Values (XGBoost-Grid Tuned)
@@ -739,19 +742,9 @@ library(scales)
 plot(x=xgb_tuned_pred, y= y_test,
      xlab='Predicted Values',
      ylab='Actual Values',
-     main='Predicted vs. Actual Values (XGBoost-Grid Tuned)')
-abline(a=0, b=1)
-
-
-# Predicted vs. Actual Values (Random Forest-Default)
-plot(x=rf_def_pred, y= y_test,
-     xlab='Predicted Values',
-     ylab='Actual Values',
-     main='Predicted vs. Actual Values (Random Forest-Default)')
+     main='Actual vs Predicted Values (XGBoost-Grid Tuned)')
 abline(a=0, b=1)
 ```
-
-### Comparison on XGBoost (Fine tuned parameters) and Random Forest (Default parameters)
 
 Overview on actual vs predictions of new loan amount using XGBoost tuned prediction model
 
@@ -759,16 +752,11 @@ Overview on actual vs predictions of new loan amount using XGBoost tuned predict
 data <- data.frame(actual= y_test, predicted=xgb_tuned_pred)
 head(data)
 ```
-
-Overview on actual vs predictions of new loan amount using Random Forest Default prediction model.
-
-```{r}
-data1 <- data.frame(actual= y_test, predicted=rf_def_pred)
-head(data1)
-```
-
 ------------------------------------------------------------------------
 
 # Conclusion
+In conclusion, two final prediction models are developed in this project made up of one loan approval classification prediction model and one loan amount approved regression prediction model.
 
-In conclusion,
+@Hafiza, please fill in your conclusion on classification modelling.
+
+In predicting the loan amount to be approved for customer, XGBoost regression model is the best model among the 5 models developed as it has the lowest Root Mean Square Error (RMSE) at 52637.67 and highest R Squared value at 0.50. However, there is still a room for improvement for the model to fit better on the dataset in future development.
