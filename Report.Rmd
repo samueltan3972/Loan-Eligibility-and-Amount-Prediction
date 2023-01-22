@@ -434,7 +434,7 @@ model_results_df <- data.frame(
 print(model_results_df)
 ```
 
-# 4. Regression - If customer is not eligible for the input required amount and duration, what can be amount for the given duration
+# 4. Regression - Prediction on loan amount to be approved based on dataset.
 
 5 Regression algorithms
 
