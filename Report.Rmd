@@ -44,6 +44,12 @@ This project is using OSEMN model.
 3. Approval status for education status
 
 **MODEL:**
+Listed below are the machine learning algorithms that will be used in the classification modeling for loan status prediction:
+1. Logistic Regression 
+2. Support Vector Machines (SVM)
+3. Naïve Bayes (NB)
+4. Decision Tree (DT)
+5. Extreme Gradient Boosting (XGBoost)
 
 Listed below are the machine learning algorithms that will be used in regression modelling for loan amount approval prediction:
 1. Extreme Gradient Boosting (XGBoost)
@@ -53,6 +59,8 @@ Listed below are the machine learning algorithms that will be used in regression
 5. Random Forest (RF)
 
 **INTEPRET:**
+For classification modeling:
+The accuracy, precision, recall, and F1-score will be used to evaluate the developed model’s performance, and the best model will be chosen as the final model for loan status prediction.
 
 For regression modelling:
 Root Mean Square Error (RMSE) and R Squared value will be used to evaluate the performance of model developed and the best model will be chosen as the final model for loan amount approval prediction.
@@ -771,6 +779,6 @@ head(data)
 # Conclusion
 In conclusion, two final prediction models are developed in this project made up of one loan approval classification prediction model and one loan amount approved regression prediction model.
 
-@Hafiza, please fill in your conclusion on classification modelling.
+In predicting the customer loan approval status using binary classification, logistic regression, support vector machines and decision trees give the same result for accuracy, recall, precision and F1-score. All 3 models meet the project objective, however, future work can be done to introduce hyperparameter tuning for each model to find the best one to be used for classification modeling.
 
 In predicting the loan amount to be approved for customer, XGBoost regression model is the best model among the 5 models developed as it has the lowest Root Mean Square Error (RMSE) and highest R Squared value. However, there is still a room for improvement for the model to fit better on the dataset in future development.
