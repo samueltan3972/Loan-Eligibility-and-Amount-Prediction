@@ -21,7 +21,7 @@ date: "2022-12-29"
 A bank wants to automate the loan eligibility process based on customer details submitted through online application form. The details filled by the customer are Gender, Marital Status, Education, Number of Dependents, Income of self and co applicant, Required Loan Amount, Required Loan Term, Credit History and others. The requirements are as follows:
 
 1.  Check eligibility of the Customer given the inputs described above. (Classification)
-2.  If customer is not eligible for the input required amount and duration, what can be amount for the given duration. (Regression)
+2.  Predict loan amount to be approved given the inputs described above. (Regression)
 
 ## Project Methodology
 
@@ -41,7 +41,17 @@ This project is using OSEMN model.
 
 **MODEL:**
 
+Listed below are the machine learning algorithms that will be used in regression modelling for loan amount approval prediction:
+1. Extreme Gradient Boosting (XGBoost)
+2. Support Vector Regression (SVR)
+3. K-Nearest Neighbor(KNN)
+4. Linear Regression
+5. Random Forest (RF)
+
 **INTEPRET:**
+
+For regression modelling:
+Root Mean Square Error (RMSE) and R Squared value will be used to evaluate the performance of model developed and the best model will be chosen as the final model for loan amount approval prediction.
 
 ------------------------------------------------------------------------
 
