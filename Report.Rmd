@@ -39,6 +39,10 @@ This project is using OSEMN model.
 
 **EXPLORATORY:**
 
+1. Summary of the cleaned dataset
+2. Distribution of applicant's income
+3. Approval status for education status
+
 **MODEL:**
 
 Listed below are the machine learning algorithms that will be used in regression modelling for loan amount approval prediction:
