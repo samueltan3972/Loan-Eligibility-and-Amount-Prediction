@@ -759,4 +759,4 @@ In conclusion, two final prediction models are developed in this project made up
 
 @Hafiza, please fill in your conclusion on classification modelling.
 
-In predicting the loan amount to be approved for customer, XGBoost regression model is the best model among the 5 models developed as it has the lowest Root Mean Square Error (RMSE) at 52637.67 and highest R Squared value at 0.50. However, there is still a room for improvement for the model to fit better on the dataset in future development.
+In predicting the loan amount to be approved for customer, XGBoost regression model is the best model among the 5 models developed as it has the lowest Root Mean Square Error (RMSE) and highest R Squared value. However, there is still a room for improvement for the model to fit better on the dataset in future development.
