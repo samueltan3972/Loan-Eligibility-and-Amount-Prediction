@@ -29,3 +29,6 @@ Exploration:
 Model:
 1. Classification: X - Married, Dependents, Education, etc Y - Loan_Status
 2. Regression: X - Married, Dependent, Education, etc, Y - Loan_Amount
+
+Notes: Please use dataset that start with prefix "processed_*.csv"
+Notes 2: The cleaned data is process with Group Project.R, please continue with the modeling with 'dataset' or 'training_set', 'testing_set' variable in Group Project.R 

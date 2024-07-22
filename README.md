@@ -1,40 +1,33 @@
 # WQD7004 Programming for Data Science
 
-### Notes: Please use dataset that start with prefix "processed_*.csv"
-### Notes 2: The cleaned data is process with Group Project.R, please continue with the modeling with 'dataset' or 'training_set', 'testing_set' variable in Group Project.R 
+This is a group assignment for WQD 7004 Programming for Data Science for the Master of Data Science at University of Malaya (UM). This project explore loan eligibility prediction based on the customer input. The [report](report/Group%20Project%20Report.pdf) of this project can be found at the [report folder](report/). 
 
-## Problem Statement: 
+The dataset used in this project is obtained from [Kaggle](https://www.kaggle.com/datasets/yashpaloswal/loan-prediction-with-3-problem-statement).
+
+![Cover Image](img/loan-cover.jpg "Cover Image")
+
+---
+
+### Introduction
 
 A Company wants to automate the loan eligibility process based on customer details provided while filling online application form. The details filled by the customer are Gender, Marital Status, Education, Number of Dependents, Income of self and co applicant, Required Loan Amount, Required Loan Term, Credit History and others. The requirements are as follows:
 
-1. Check eligibility of the Customer given the inputs described above.(Classification)
-2. If customer is not eligible for the input required amount and duration, what can be amount for the given duration.(Regression)
+1. Check eligibility of the Customer given the inputs described above. (Classification)
+2. If customer is not eligible for the input required amount and duration, what can be amount for the given duration. (Regression)
+
+#### Findings
+For customer loan approval status, logistic regression, support vector machines, and decision trees all achieved the same result, meeting the project objective. Future work can focus on hyperparameter tuning to optimize these models. 
+
+For predicting the approved loan amount, the XGBoost regression model outperformed five other models, having the lowest RMSE and highest R-squared value.
 
 ---
 
-**1. OSEMN**
+### Results
 
-Obtain\
-Scrub - Samuel \
-Exploratory - Mohan, Samuel \
-Model 1 - Hafiza, Boon Sheng \
-Model 2 - Boon Sheng, Auni \
-Interpret
+The demo report link can be found at [here](https://samueltan3972.github.io/backup/WQD7004-ProgrammingInDataScience.html).
 
----
+#### Loan Approval Status Model Result
+![Loan Approval Status Result](img/loan_approval_status_result.png "Loan Approval Status Result")
 
-**Data preprocessing:**
-1. Combine training and testing set and sample_submission
-2. Fill in missing value/Remove (Loan amount empty)
-3. Convert to 100k
-4. Label or one-hot encoding for categorical data
-5. Split into new training and testing set
-
-**Exploration:**
-1. Check for missing value
-2. Visualization
-3. Automated EDA
-
-**Model:**
-1. Classification: X - Married, Dependents, Education, etc Y - Loan_Status
-2. Regression: X - Married, Dependent, Education, etc, Y - Loan_Amount
+#### Loan Eligible Amount Prediction Model Result
+![Loan Eligible Amount](img/loan_amount_predict_result.png "Loan Eligible Amount")

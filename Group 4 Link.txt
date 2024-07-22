@@ -7,7 +7,7 @@ S2196123	Samuel Tan Joo Woon
 
 Link:
 https://rpubs.com/s_t1234/993893
-https://github.com/samueltan3972/WQD7004-Programming-for-Data-Science
-https://samueltan3972.github.io/WQD7004-ProgrammingInDataScience.html
+https://github.com/samueltan3972/Loan-Eligibility-and-Amount-Prediction
+https://samueltan3972.github.io/backup/WQD7004-ProgrammingInDataScience.html
 
 https://drive.google.com/drive/folders/1BnX94Do0roW11LUea6FfiETPsxD-qyfT?usp=share_link (Google Drive Link in case file corrupted)
