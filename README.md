@@ -17,7 +17,7 @@ A Company wants to automate the loan eligibility process based on customer detai
 1. Check eligibility of the Customer given the inputs described above. (Classification)
 2. If customer is not eligible for the input required amount and duration, what can be amount for the given duration. (Regression)
 
-#### Findings
+### Findings
 For customer loan approval status, logistic regression, support vector machines, and decision trees all achieved the same result, meeting the project objective. Future work can focus on hyperparameter tuning to optimize these models. 
 
 For predicting the approved loan amount, the XGBoost regression model outperformed five other models, having the lowest RMSE and highest R-squared value.
