@@ -5,6 +5,8 @@ This is a group assignment for WQD 7004 Programming for Data Science for the Mas
 The dataset used in this project is obtained from [Kaggle](https://www.kaggle.com/datasets/yashpaloswal/loan-prediction-with-3-problem-statement).
 
 ![Cover Image](img/loan-cover.jpg "Cover Image")
+<sup><sub>Image Attribution: Photo by [Karolina Kaboompics](https://www.pexels.com/photo/hands-holding-dollars-4968639/)</sub></sup>
+
 
 ---
 
