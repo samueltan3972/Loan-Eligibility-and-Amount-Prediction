@@ -1,4 +1,4 @@
-# WQD7004 Programming for Data Science
+# Loan Eligibility and Amount Prediction
 
 This is a group assignment for WQD 7004 Programming for Data Science for the Master of Data Science at University of Malaya (UM). This project explore loan eligibility prediction based on the customer input. The [report](report/Group%20Project%20Report.pdf) of this project can be found at the [report folder](report/). 
 
